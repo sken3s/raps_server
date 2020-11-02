@@ -13,7 +13,7 @@ app.use(cors());
 app.use(express.json());
 
 //MongoDB connection
-const uri = process.env.ATLAS_URI;
+const uri = process.env.ATLAS_URI221;
 mongoose.connect(uri, { useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true }
 );
 const connection = mongoose.connection;
@@ -22,11 +22,9 @@ connection.once('open', () => {
 })
 
 //Routes
-const exercisesRouter = require('./routes/p_exercises');
-const usersRouter = require('./routes/p_users');
+const policeRouter = require('./routes/api/policeSignin');
 
-app.use('/exercises',exercisesRouter);
-app.use('/users',usersRouter);
+app.use('/police',policeRouter);
 
 
 //Run server
