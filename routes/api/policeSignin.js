@@ -2,19 +2,40 @@ const router = require('express').Router();
 let Police = require('../../models/police.model');
 let PoliceSession = require('../../models/policeSession.model');
 
-/*
-//get all polices (get request)
-router.route('/').get((req, res) => {
-  Police.find()
-    .then(polices => res.json(polices))
-    .catch(err => res.status(400).json('Error: ' + err));
-});
-*/
+//List All Police Accounts
+router.route('/list').get((req,res) => {
+    Police.find({   
+            isDeleted:false
+        }, (err,policeList) =>{
+            if(err){
+                return res.send({
+                    success:false,
+                    message:'Error:Server error'
+                })
+            }else{
+                let data=[];
+                for(i in policeList){
+                    console.log();
+                    let username= policeList[i].username;
+                    let adminRights = policeList[i].adminRights;
+                   data.push({'username':username, 'adminRights':adminRights})
+                }
+
+                return res.send({
+                    success:true,
+                    message:'Session verified',
+                    data:data
+                })
+            }
+})
+})
+
+
 
 //Sign up (post request)
 router.route('/signup').post((req, res) => {
   const { body } = req;
-  const {username, name, password, adminRights} = body;
+  const {username, name, password, adminRights, sessionToken} = body; //session token of an admin should be added
   //Data constraints
   if(!username || username.length<4){
       return res.send({
@@ -31,32 +52,58 @@ router.route('/signup').post((req, res) => {
                 success:false,
                 message:'Error: Password invalid.'
             })}
-    Police.find({
-        username:username
-    }, (err, previousPolice)=>{
+    if(!sessionToken|| sessionToken.length!=24){
+        return res.send({
+            success:false,
+            message:'Error: Session Token invalid.'
+        })}
+    //validating admin session
+    PoliceSession.find({   
+        _id:sessionToken, 
+        isDeleted:false,
+        adminRights:true
+    }, (err,sessions) =>{
         if(err){
             return res.send({
                 success:false,
-                message:'Error: Server error (police find in signin.js)'
+                message:'Error:Server error or Session not found'
             })
         }
-        else if(previousPolice.length>0){
+        if(sessions.length!=1){
             return res.send({
                 success:false,
-                message:'Error:Username taken.'
+                message:'Error:Invalid Session'
+            })
+        }else{
+            //validating police user creation
+            Police.find({
+                username:username
+            }, (err, previousPolice)=>{
+                if(err){
+                    return res.send({
+                        success:false,
+                        message:'Error: Server error (police find in signin.js)'
+                    })
+                }
+                else if(previousPolice.length>0){
+                    return res.send({
+                        success:false,
+                        message:'Error:Username taken.'
+                    })
+                }
+                //save to database
+                const newPolice = new Police();
+                newPolice.username=username;
+                newPolice.name=name;
+                newPolice.password=newPolice.generateHash(password);
+                newPolice.adminRights=adminRights;
+                newPolice.save()
+                .then(() => res.json('New Police signed up!'))
+                .catch(err => res.status(400).json('Error: ' + err));
             })
         }
-        //save to database
-        const newPolice = new Police();
-        newPolice.username=username;
-        newPolice.name=name;
-        newPolice.password=newPolice.generateHash(password);
-        newPolice.adminRights=adminRights;
-        newPolice.save()
-        .then(() => res.json('New Police signed up!'))
-        .catch(err => res.status(400).json('Error: ' + err));
-    })
-});
+        })
+    });
 
 //Password Validation/ Sign in
 router.route('/signin').post((req, res) => {
@@ -97,6 +144,12 @@ router.route('/signin').post((req, res) => {
                 message:'Error:Invalid password'
             })
         }
+        if(police.isDeleted){
+            return res.send({
+                success:false,
+                message:'Error:Deleted account'
+            })
+        }
         //otherwise create user session
         const policeSession = new PoliceSession();
         policeSession.username=police.username;
@@ -135,7 +188,7 @@ router.route('/verifysession').get((req, res) => {
                     message:'Error:Server error or Session not found'
                 })
             }
-            if(sessions.length!=1){
+            if(sessions.length!=1 || sessions[0].isDeleted){
                 return res.send({
                     success:false,
                     message:'Error:Invalid Session'
@@ -175,4 +228,61 @@ router.route('/logout').get((req, res) => {
 })
 })
 
+//Deleting a user
+router.route('/delete').delete((req, res) => {
+    const { body } = req;
+    const {username, sessionToken} = body; //session token of an admin should be added
+    //Data constraints
+    if(!username || username.length<4){
+        return res.send({
+            success:false,
+            message:'Error: Username invalid.'
+        })}
+      if(!sessionToken|| sessionToken.length!=24){
+          return res.send({
+              success:false,
+              message:'Error: Session Token invalid.'
+          })}
+      //validating admin session
+      PoliceSession.find({   
+          _id:sessionToken, 
+          isDeleted:false,
+          adminRights:true
+      }, (err,sessions) =>{
+          if(err){
+              return res.send({
+                  success:false,
+                  message:'Error:Server error or Session not found'
+              })
+          }
+          if(sessions.length!=1 || sessions[0].isDeleted){
+              return res.send({
+                  success:false,
+                  message:'Error:Invalid Session'
+              })
+          }else{
+              //validating police user creation
+              Police.findOneAndUpdate({
+                  username:username,
+                  isDeleted:false
+              }, {$set:{isDeleted:true}},null,
+              (err, police)=>{
+                  if(err){
+                      return res.send({
+                          success:false,
+                          message:'Error: Server error'
+                      })
+                  }
+                  else{
+                      return res.send({
+                          success:true,
+                          message:'User Deleted.'
+                      })
+                  }
+              })
+          }
+          })
+      });
+
+     
 module.exports = router;
