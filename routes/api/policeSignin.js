@@ -100,6 +100,7 @@ router.route('/signin').post((req, res) => {
         //otherwise create user session
         const policeSession = new PoliceSession();
         policeSession.username=police.username;
+        policeSession.adminRights=police.adminRights;
         policeSession.save((err,doc)=>{
             if(err){
                 return res.send({
@@ -142,7 +143,8 @@ router.route('/verifysession').get((req, res) => {
             }else{
                 return res.send({
                     success:true,
-                    message:'Session verified'
+                    message:'Session verified',
+                    adminRights:sessions[0].adminRights
                 })
             }
 })
