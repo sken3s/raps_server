@@ -15,7 +15,6 @@ router.route('/list').get((req,res) => {
             }else{
                 let data=[];
                 for(i in policeList){
-                    console.log();
                     let username= policeList[i].username;
                     let adminRights = policeList[i].adminRights;
                    data.push({'username':username, 'adminRights':adminRights})
@@ -23,7 +22,7 @@ router.route('/list').get((req,res) => {
 
                 return res.send({
                     success:true,
-                    message:'Session verified',
+                    message:'List received',
                     data:data
                 })
             }
@@ -158,7 +157,8 @@ router.route('/signin').post((req, res) => {
             if(err){
                 return res.send({
                     success:false,
-                    message:'Error:Server error'
+                    message:'Error:Server error',
+                    adminRights:policeSession.adminRights
                 });
             };
 
@@ -197,7 +197,8 @@ router.route('/verifysession').get((req, res) => {
                 return res.send({
                     success:true,
                     message:'Session verified',
-                    adminRights:sessions[0].adminRights
+                    adminRights:sessions[0].adminRights,
+                    username:sessions[0].username
                 })
             }
 })
@@ -231,7 +232,7 @@ router.route('/logout').get((req, res) => {
 //Deleting a user
 router.route('/delete').delete((req, res) => {
     const { body } = req;
-    const {username, sessionToken} = body; //session token of an admin should be added
+    const {username, sessionToken} = body; //username of account to be deleted, session token of an admin should be added
     //Data constraints
     if(!username || username.length<4){
         return res.send({
