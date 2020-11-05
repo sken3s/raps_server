@@ -97,7 +97,12 @@ router.route('/signup').post((req, res) => {
                 newPolice.password=newPolice.generateHash(password);
                 newPolice.adminRights=adminRights;
                 newPolice.save()
-                .then(() => res.json('New Police signed up!'))
+                .then(() => 
+                    res.send({
+                    success:true,
+                    message:'New user signed up.'
+                })
+                )
                 .catch(err => res.status(400).json('Error: ' + err));
             })
         }
