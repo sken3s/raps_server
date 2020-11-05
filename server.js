@@ -23,9 +23,10 @@ connection.once('open', () => {
 
 //Routes
 const policeRouter = require('./routes/api/policeSignin');
+const accidentRouter = require('./routes/api/accidentSubmission');
 
 app.use('/police',policeRouter);
-
+app.use('/accident',accidentRouter);
 
 //Run server
 app.listen(port, () => {
