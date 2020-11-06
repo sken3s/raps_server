@@ -19,9 +19,15 @@ router.route("/signin").post((req, res) => {
     return res.json("PASSWORD_INVALID");
   }
 
-  ETeam.find({ username: username })
-    .then((eteam) => res.json("Succesfully signed in"))
-    .catch((err) => res.status(400).json("INVALID_USER"));
+  ETeam.findOne({ username: username })
+    .then((eteam) => {
+      if (eteam.password === password) {
+        return res.json("Succesfully signed in");
+      }
+
+      return res.json('PASSWORD_INVALID');
+    })
+    .catch((err) => res.status(400).json("USER_INVALID"));
 });
 
 module.exports = router;
