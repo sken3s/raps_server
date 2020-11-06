@@ -23,8 +23,10 @@ connection.once('open', () => {
 
 //Routes
 const policeRouter = require('./routes/api/policeSignin');
+const eTeamRouter = require('./routes/api/eTeam')
 
 app.use('/police',policeRouter);
+app.use('/eteam/', eTeamRouter);
 
 
 //Run server
