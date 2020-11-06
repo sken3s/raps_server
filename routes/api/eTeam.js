@@ -23,3 +23,5 @@ router.route("/signin").post((req, res) => {
     .then((eteam) => res.json("Succesfully signed in"))
     .catch((err) => res.status(400).json("INVALID_USER"));
 });
+
+module.exports = router;
