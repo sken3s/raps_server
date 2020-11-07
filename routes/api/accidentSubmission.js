@@ -53,7 +53,20 @@ router.route('/submit').post((req, res) => {
                 const  newAccident = new Accident();
                  newAccident
                  newAccident.datetime = datetime;
+                 newAccident.driverAge = driverAge;
+                 newAccident.driverGender = driverGender;
+                 newAccident.weather = weather;
+                 newAccident.vehicleType = vehicleType;
+                 newAccident.vehicleYOM = vehicleYOM;
+                 newAccident.licenseIssueDate = licenseIssueDate;
+                 newAccident.drivingSide = drivingSide;
+                 newAccident.severity = severity;
+                 newAccident.reason = reason;
+                 newAccident.kmPost = kmPost;
+                 newAccident.suburb = suburb;
+                 newAccident.operatedSpeed = operatedSpeed;
                  newAccident.sessionToken = sessionToken;
+                 
     /*driverAge,
     driverGender,
     weather ,
