@@ -7,6 +7,7 @@ const eTeamSchema = new Schema(
     username: { type: String, required: true, unique: true },
     name: { type: String, default: "" },
     password: { type: String, required: true },
+    availability: { type: Boolean, required: true },
   },
   {
     timestamps: true,
@@ -19,7 +20,6 @@ eTeamSchema.methods.generateHash = (pwd) =>
 eTeamSchema.methods.validPassword = (pwd) =>
   bcrypt.compareSync(pwd, this.password);
 
-
-const ETeam = mongoose.model('ETeam', eTeamSchema);
+const ETeam = mongoose.model("ETeam", eTeamSchema);
 
 module.exports = ETeam;
