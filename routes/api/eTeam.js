@@ -22,7 +22,7 @@ router.route("/signin").post((req, res) => {
   ETeam.findOne({ username: username })
     .then((eteam) => {
       if (eteam.password === password) {
-        return res.json("Succesfully signed in");
+        return res.json(eteam);
       }
 
       return res.json("PASSWORD_INVALID");
