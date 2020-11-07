@@ -24,9 +24,12 @@ connection.once('open', () => {
 //Routes
 const policeRouter = require('./routes/api/policeSignin');
 const accidentRouter = require('./routes/api/accidentSubmission');
+const eTeamRouter = require('./routes/api/eTeam')
 
 app.use('/police',policeRouter);
 app.use('/accident',accidentRouter);
+app.use('/eteam', eTeamRouter);
+
 
 //Run server
 app.listen(port, () => {
