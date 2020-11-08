@@ -1,8 +1,8 @@
-const express = require('express');
-const cors = require('cors');
-const mongoose = require('mongoose');
+const express = require("express");
+const cors = require("cors");
+const mongoose = require("mongoose");
 
-require('dotenv').config();
+require("dotenv").config();
 
 //Listen at port 5000
 const app = express();
@@ -14,22 +14,26 @@ app.use(express.json());
 
 //MongoDB connection
 const uri = process.env.ATLAS_URI221;
-mongoose.connect(uri, { useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true }
-);
+mongoose.connect(uri, {
+  useNewUrlParser: true,
+  useCreateIndex: true,
+  useUnifiedTopology: true,
+});
 const connection = mongoose.connection;
-connection.once('open', () => {
+connection.once("open", () => {
   console.log("MongoDB database connection established successfully");
-})
+});
 
 //Routes
-const policeRouter = require('./routes/api/policeSignin');
-const eTeamRouter = require('./routes/api/eTeam')
+const policeRouter = require("./routes/api/policeSignin");
+const eTeamRouter = require("./routes/api/eTeam");
+const ePointRouter = require("./routes/api/entrancePoints");
 
-app.use('/police',policeRouter);
-app.use('/eteam/', eTeamRouter);
-
+app.use("/police", policeRouter);
+app.use("/eteam/", eTeamRouter);
+app.use("/epoints/", ePointRouter);
 
 //Run server
 app.listen(port, () => {
-    console.log(`Server is running on port: ${port}`);
+  console.log(`Server is running on port: ${port}`);
 });
