@@ -23,8 +23,17 @@ connection.once('open', () => {
 
 //Routes
 const policeRouter = require('./routes/api/policeSignin');
+const accidentRouter = require('./routes/api/accidentSubmission');
+const eTeamRouter = require('./routes/api/eTeam')
+const driverRouter = require('./routes/api/driverSignin')
+const vehicleRouter = require('./routes/api/driverVehicle')
 
 app.use('/police',policeRouter);
+app.use('/accident',accidentRouter);
+app.use('/eteam', eTeamRouter);
+app.use('/driver', driverRouter);
+app.use('/vehicle', vehicleRouter);
+
 
 
 //Run server
