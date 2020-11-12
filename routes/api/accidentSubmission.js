@@ -2,7 +2,7 @@ const router = require('express').Router();
 let Accident = require('../../models/accident.model');
 let PoliceSession = require('../../models/policeSession.model');
 
-//Sign up (post request)
+//Submit (post request)
 router.route('/submit').post((req, res) => {
   const { body } = req;
   const {
@@ -65,7 +65,7 @@ router.route('/submit').post((req, res) => {
                  newAccident.kmPost = kmPost;
                  newAccident.suburb = suburb;
                  newAccident.operatedSpeed = operatedSpeed;
-                 newAccident.status = status;
+                 newAccident.status = "reported";
                  newAccident.sessionToken = sessionToken;
                  
     /*driverAge,

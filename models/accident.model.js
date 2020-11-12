@@ -16,7 +16,8 @@ const accidentSchema = new Schema({
   kmPost: { type: Number },
   suburb: { type: String },
   operatedSpeed: { type: Number },
-  sessionToken:{type:String}
+  sessionToken:{type:String},
+  status:{type:String}  //status of accident: 'reported','eTeam dispatched','handled'
 }, {
   timestamps: true,
 });

@@ -10,7 +10,7 @@ const eventSchema = new Schema({
   kmPost: { type: Number },
   suburb: { type: String },
   sessionToken:{type:String},
-  status:{type:String}  //status of event: 'reported','eTeam dispatched','handled'
+  status:{type:String} //status of event: 'reported','eTeam dispatched','handled'
 }, {
   timestamps: true,
 });
