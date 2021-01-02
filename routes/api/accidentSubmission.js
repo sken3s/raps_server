@@ -19,8 +19,7 @@ router.route('/submit').post((req, res) => {
     kmPost  ,
     suburb,
     operatedSpeed,
-    sessionToken,
-    status
+    sessionToken
 } = body;
   //Data constraints
   if(!datetime){
@@ -68,19 +67,6 @@ router.route('/submit').post((req, res) => {
                  newAccident.status = "reported";
                  newAccident.sessionToken = sessionToken;
                  
-    /*driverAge,
-    driverGender,
-    weather ,
-    vehicleType ,
-    vehicleYOM  ,
-    licenseIssueDate,
-    drivingSide ,
-    severity ,
-    reason ,
-    kmPost  ,
-    suburb,
-    operatedSpeed,
-    sessionToken*/
                  newAccident.save()
                 .then(() => 
                     res.send({

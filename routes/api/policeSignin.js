@@ -2,6 +2,8 @@ const router = require('express').Router();
 let Police = require('../../models/police.model');
 let PoliceSession = require('../../models/policeSession.model');
 
+let ETeam = require('../../models/eTeam.model');
+
 //List All Police Accounts
 router.route('/list').get((req,res) => {
     Police.find({   
@@ -290,5 +292,92 @@ router.route('/delete').delete((req, res) => {
           })
       });
 
+
+
+//Emergency Tean Add (post request)
+router.route('/eteam/add').post((req, res) => {
+    const { body } = req;
+    const {username, name, contactNumber, password, sessionToken} = body; //session token of an police admin should be added
+    //Data constraints
+    if(!username || username.length<4){
+        return res.send({
+            success:false,
+            message:'Error: Username invalid.'
+        })}
+      if(!name){
+          return res.send({
+              success:false,
+              message:'Error: Name cannot be blank.'
+          })}
+      if(!contactNumber){
+            return res.send({
+                success:false,
+                message:'Error: contactNumber cannot be blank.'
+            })}          
+      if(!password|| password.length<4){
+              return res.send({
+                  success:false,
+                  message:'Error: Password invalid.'
+              })}
+      if(!sessionToken|| sessionToken.length!=24){
+          return res.send({
+              success:false,
+              message:'Error: Session Token invalid.'
+          })}
+      //validating admin session
+      PoliceSession.find({   
+          _id:sessionToken, 
+          isDeleted:false,
+          adminRights:true
+      }, (err,sessions) =>{
+          if(err){
+              return res.send({
+                  success:false,
+                  message:'Error:Server error or Session not found'
+              })
+          }
+          if(sessions.length!=1){
+              return res.send({
+                  success:false,
+                  message:'Error:Invalid Session'
+              })
+          }else{
+              //validating police user creation
+              ETeam.find({
+                  username:username
+              }, (err, previousETeam)=>{
+                  if(err){
+                      return res.send({
+                          success:false,
+                          message:'Error: Server error (ETeam reg find in police signin.js)'
+                      })
+                  }
+                  else if(previousETeam.length>0){
+                      return res.send({
+                          success:false,
+                          message:'Error:Username taken.'
+                      })
+                  }
+                  //save to database
+                  const newETeam = new ETeam();
+                  newETeam.username=username;
+                  newETeam.name=name;
+                  newETeam.password=newETeam.generateHash(password);
+                  newETeam.contactNumber=contactNumber;
+                  newETeam.availability=false; //auto sae availability as false
+                  newETeam.lat="0";
+                  newETeam.lng="0";
+                  newETeam.save()
+                  .then(() => 
+                      res.send({
+                      success:true,
+                      message:'New ETeam added.'
+                  })
+                  )
+                  .catch(err => res.status(400).json('Error: ' + err));
+              })
+          }
+          })
+      });
      
 module.exports = router;
