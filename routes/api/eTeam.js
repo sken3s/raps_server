@@ -1,5 +1,6 @@
 const router = require("express").Router();
 let ETeam = require("../../models/eTeam.model");
+let ETeamSession = require('../../models/eTeamSession.model');
 
 router.route("/list").get((req, res) => {
   ETeam.find()
@@ -7,52 +8,97 @@ router.route("/list").get((req, res) => {
     .catch((err) => res.status(400).json("SERVER_ERROR"));
 });
 
-router.route("/signin").post((req, res) => {
-  const username = req.body.username;
-  const password = req.body.password;
+//Sign in
+router.route('/signin').post((req, res) => {
+  const { body } = req;
+  const {username, password} = body;
+  
+  if(!username || username.length<4){
+      return res.send({
+          success:false,
+          message:'Error: Username invalid.'
+      })}
 
-  if (!username || username.length < 4) {
-    return res.json("USERNAME_INVALID");
-  }
-
-  if (!password || password.length < 4) {
-    return res.json("PASSWORD_INVALID");
-  }
-
-  ETeam.findOne({ username: username })
-    .then((eteam) => {
-      if (eteam.password === password) {
-        return res.json(eteam);
+  if(!password|| password.length<4){
+      return res.send({
+          success:false,
+          message:'Error: Password invalid.'
+      })}    
+  //find by username
+  ETeam.find({
+      username:username
+  },(err,users)=>{
+      if(err){
+          return res.send({
+              success:false,
+              message:'Error:Server error'
+          })
       }
+      if(users.length!=1){
+          return res.send({
+              success:false,
+              message:'Error:Invalid username (password validation)'
+          })
+      }
+      const eTeam = users[0];
+      if(!eTeam.validPassword(password)){
+          return res.send({
+              success:false,
+              message:'Error:Invalid password'
+          })
+      }
+      if(eTeam.isDeleted){
+          return res.send({
+              success:false,
+              message:'Error:Deleted account'
+          })
+      }
+      //otherwise create user session
+      const eTeamSession = new ETeamSession();
+      eTeamSession.username=eTeam.username;
+      eTeamSession.save((err,doc)=>{
+          if(err){
+              return res.send({
+                  success:false,
+                  message:'Error:Server error',
+              });
+          };
 
-      return res.json("PASSWORD_INVALID");
-    })
-    .catch((err) => res.status(400).json("USER_INVALID"));
+          return res.send({
+              success:true,
+              message:'Valid sign in',
+              token:doc._id //session id taken from mongodb doc (record)
+          });
+      });
+      
+  });
 });
 
-router.route("/:id").get((req, res) => {
-  ETeam.findById(req.params.id)
-    .then((eteam) => res.json(eteam))
-    .catch((err) => res.status(400).json("Error: " + err));
-});
+//Logout
+router.route('/logout').get((req, res) => {
+  //get the token
+  const { query } =req;
+  const { token } = query;
+  //verify if its one of a kind and not deleted.
+  ETeamSession.findOneAndUpdate({   
+          _id:token, 
+          isDeleted:false
+      },{
+          $set:{isDeleted:true}
+      }, null,(err,sessions) =>{
+          if(err){
+              return res.send({
+                  success:false,
+                  message:'Error:Server error or Session not found'
+              })
+          }
+          return res.send({
+              success:true,
+              message:'Session deleted'
+          })
+})
+})
 
-router.route("/updateAvailability/:id").post((req, res) => {
-  const availability = (req.body.availability === "true");
 
-  if (typeof availability !== "boolean") {
-    return res.json(typeof availability);
-  }
-
-  ETeam.findById(req.params.id)
-    .then((eteam) => {
-      eteam.availability = availability;
-
-      eteam
-        .save()
-        .then(() => res.json("Availability updated"))
-        .catch((err) => res.status(400).json("ERROR" + err));
-    })
-    .catch((err) => res.status(400).json("ERROR" + err));
-});
 
 module.exports = router;

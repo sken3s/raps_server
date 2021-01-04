@@ -17,11 +17,12 @@ const eTeamSchema = new Schema(
   }
 );
 
-eTeamSchema.methods.generateHash = (pwd) =>
-  bcrypt.hashSync(pwd, bcrypt.genSaltSync(8), null);
-
-eTeamSchema.methods.validPassword = (pwd) =>
-  bcrypt.compareSync(pwd, this.password);
+  eTeamSchema.methods.generateHash = function(password){
+    return bcrypt.hashSync(password,bcrypt.genSaltSync(8),null);
+  };
+  eTeamSchema.methods.validPassword = function(password){
+    return bcrypt.compareSync(password,this.password);
+  };
 
 const ETeam = mongoose.model("ETeam", eTeamSchema);
 
