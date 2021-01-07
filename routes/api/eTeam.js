@@ -74,6 +74,39 @@ router.route('/signin').post((req, res) => {
   });
 });
 
+//Verify
+router.route('/verifysession').get((req, res) => {
+    //get the token
+    const { query } =req;
+    const { token } = query;
+    //verify if its one of a kind and not deleted.
+    ETeamSession.find({   
+            _id:token, 
+            isDeleted:false
+        }, (err,sessions) =>{
+            if(err){
+                return res.send({
+                    success:false,
+                    message:'Error:Server error or Session not found'
+                })
+            }
+            if(sessions.length!=1 || sessions[0].isDeleted){
+                return res.send({
+                    success:false,
+                    message:'Error:Invalid Session'
+                })
+            }else{
+                return res.send({
+                    success:true,
+                    message:'Session verified',
+                    username:sessions[0].username
+                })
+            }
+})
+})
+
+
+
 //Logout
 router.route('/logout').get((req, res) => {
   //get the token
@@ -98,6 +131,125 @@ router.route('/logout').get((req, res) => {
           })
 })
 })
+
+
+//set Availability
+router.route('/availablity').post((req, res) => {
+    const { body } = req;
+    const {sessionToken, value} = body; //eteam session, value
+    //Data constraints
+    if(typeof value != "boolean"){
+        return res.send({
+            success:false,
+            message:'Error: Value invalid.'
+        })}
+      if(!sessionToken|| sessionToken.length!=24){
+          return res.send({
+              success:false,
+              message:'Error: Session Token invalid.'
+          })}
+      //validating session
+      ETeamSession.find({   
+          _id:sessionToken, 
+          isDeleted:false,
+      }, (err,sessions) =>{
+          if(err){
+              return res.send({
+                  success:false,
+                  message:'Error:Server error or Session not found'
+              })
+          }
+          if(sessions.length!=1 || sessions[0].isDeleted){
+              return res.send({
+                  success:false,
+                  message:'Error:Invalid Session'
+              })
+          }else{
+              //get username
+              let username  = sessions[0].username
+              //validating update
+              ETeam.findOneAndUpdate({
+                  username:username,
+                  isDeleted:false
+              }, {$set:{availability:value}},null,
+              (err, eteam)=>{
+                  if(err){
+                      return res.send({
+                          success:false,
+                          message:'Error: Server error'
+                      })
+                  }
+                  else{
+                      return res.send({
+                          success:true,
+                          message:'Availability set.',
+                          value:value
+                      })
+                  }
+              })
+          }
+          })
+      });
+
+
+//set Location
+router.route('/location').post((req, res) => {
+    const { body } = req;
+    const {sessionToken, lat, lng} = body; //eteam session, value
+    //Data constraints
+    if(typeof lat != "string" || typeof lng != "string"){ //Update this condition
+        return res.send({
+            success:false,
+            message:'Error: Values invalid.'
+        })}
+      if(!sessionToken|| sessionToken.length!=24){
+          return res.send({
+              success:false,
+              message:'Error: Session Token invalid.'
+          })}
+      //validating session
+      ETeamSession.find({   
+          _id:sessionToken, 
+          isDeleted:false,
+      }, (err,sessions) =>{
+          if(err){
+              return res.send({
+                  success:false,
+                  message:'Error:Server error or Session not found'
+              })
+          }
+          if(sessions.length!=1 || sessions[0].isDeleted){
+              return res.send({
+                  success:false,
+                  message:'Error:Invalid Session'
+              })
+          }else{
+              //get username
+              let username  = sessions[0].username
+              //validating update
+              ETeam.findOneAndUpdate({
+                  username:username,
+                  isDeleted:false
+              }, {$set:{lat:lat,lng:lng}},null,
+              (err, eteam)=>{
+                  if(err){
+                      return res.send({
+                          success:false,
+                          message:'Error: Server error'
+                      })
+                  }
+                  else{
+                      return res.send({
+                          success:true,
+                          message:'Location set.',
+                          lat:lat,
+                          lng:lng
+                      })
+                  }
+              })
+          }
+          })
+      });
 
 
 

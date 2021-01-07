@@ -9,6 +9,7 @@ const eTeamSchema = new Schema(
     password: { type: String, required: true },
     availability: { type: Boolean },
     contactNumber: { type: String, required: true },
+    isDeleted: {type: Boolean, default:false},
     lat: { type: String },
     lng: { type: String },
   },

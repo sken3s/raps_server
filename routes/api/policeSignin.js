@@ -284,7 +284,7 @@ router.route('/delete').delete((req, res) => {
                   else{
                       return res.send({
                           success:true,
-                          message:'User Deleted.'
+                          message:'Police User Deleted.'
                       })
                   }
               })
@@ -379,5 +379,62 @@ router.route('/eteam/add').post((req, res) => {
           }
           })
       });
-     
+
+//Emergency Team Delete(post request)
+router.route('/eteam/delete').delete((req, res) => {
+    const { body } = req;
+    const {username, sessionToken} = body; //username of account to be deleted, session token of an admin should be added
+    //Data constraints
+    if(!username || username.length<4){
+        return res.send({
+            success:false,
+            message:'Error: Username invalid.'
+        })}
+      if(!sessionToken|| sessionToken.length!=24){
+          return res.send({
+              success:false,
+              message:'Error: Session Token invalid.'
+          })}
+      //validating admin session
+      PoliceSession.find({   
+          _id:sessionToken, 
+          isDeleted:false,
+          adminRights:true
+      }, (err,sessions) =>{
+          if(err){
+              return res.send({
+                  success:false,
+                  message:'Error:Server error or Session not found'
+              })
+          }
+          if(sessions.length!=1 || sessions[0].isDeleted){
+              return res.send({
+                  success:false,
+                  message:'Error:Invalid Session'
+              })
+          }else{
+              //validating eTeam user
+              ETeam.findOneAndUpdate({
+                  username:username,
+                  isDeleted:false
+              }, {$set:{isDeleted:true}},null,
+              (err, eteam)=>{
+                  if(err){
+                      return res.send({
+                          success:false,
+                          message:'Error: Server error'
+                      })
+                  }
+                  else{
+                      return res.send({
+                          success:true,
+                          message:'ETeam Deleted.'
+                      })
+                  }
+              })
+          }
+          })
+      });
+
+
 module.exports = router;
