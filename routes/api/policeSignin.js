@@ -436,5 +436,45 @@ router.route('/eteam/delete').delete((req, res) => {
           })
       });
 
+  
+//Emergency Team List (get)
+router.route('/eteam/list').get((req,res) => {
+    ETeam.find({   
+            isDeleted:false
+        }, (err,eteamlist) =>{
+            if(err){
+                return res.send({
+                    success:false,
+                    message:'Error:Server error'
+                })
+            }else{
+                let data=[];
+                for(i in eteamlist){
+                    let username= eteamlist[i].username;
+                    let availability = eteamlist[i].availability;
+                    let contactNumber = eteamlist[i].contactNumber;
+                    let lat = eteamlist[i].lat;
+                    let lng = eteamlist[i].lng;
+                   data.push({
+                        'username':username, 
+                        'availability':availability,
+                        'contactNumber':contactNumber,
+                        'lat':lat,
+                        'lng':lng,
+                })
+                }
+
+                return res.send({
+                    success:true,
+                    message:'List received',
+                    data:data
+                })
+            }
+})
+})
+
+    
+
+
 
 module.exports = router;

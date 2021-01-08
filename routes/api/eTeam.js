@@ -134,7 +134,7 @@ router.route('/logout').get((req, res) => {
 
 
 //set Availability
-router.route('/availablity').post((req, res) => {
+router.route('/availability').post((req, res) => {
     const { body } = req;
     const {sessionToken, value} = body; //eteam session, value
     //Data constraints
