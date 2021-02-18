@@ -1,14 +1,13 @@
 const router = require('express').Router();
 let IncidentReport = require('../../models/incidentReport.model');
 let DriverSession = require('../../models/driverSession.model');
-const PoliceSession = require('../../models/policeSession.model');
 
 
 //Submit (post request)
 router.route('/submit').post((req, res) => {
   const { body } = req;
   const {
-  reporterName, // driver session
+  reporterName,
   incidentType,
   weather,
   vehicleType,
@@ -76,6 +75,47 @@ router.route('/submit').post((req, res) => {
         }
         )
     });
+
+
+
+//List All Incidents
+router.route('/list').get((req,res) => {
+    IncidentReport.find({   
+            //finds without filter
+        }, (err,incidentList) =>{
+            if(err){
+                return res.send({
+                    success:false,
+                    message:'Error:Server error'
+                })
+            }else{
+                let data=[];
+                for(i in incidentList){
+                   data.push({
+                        'id':incidentList[i]._id,
+                        'reporterName':incidentList[i].datetime, 
+                        'incidentType':incidentList[i].incidentType,
+                        'weather':incidentList[i].weather,
+                        'vehicleType':incidentList[i].vehicleType,
+                        'drivingSide':incidentList[i].drivingSide,
+                        'severity':incidentList[i].severity,
+                        'kmPost':incidentList[i].kmPost,
+                        'suburb':incidentList[i].suburb,
+                        'operatedSpeed':incidentList[i].operatedSpeed,
+                        'incidentDescription':incidentList[i].incidentDescription
+                })
+                }
+
+                return res.send({
+                    success:true,
+                    message:'List received',
+                    data:data
+                })
+            }
+})
+})
+
+
 
 /*
 
