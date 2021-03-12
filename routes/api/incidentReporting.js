@@ -94,7 +94,7 @@ router.route('/list').get((req,res) => {
                    data.push({
                         'id':incidentList[i]._id,
                         'reporterName':incidentList[i].datetime, 
-                        'incidentType':incidentList[i].incidentType,
+                        'incidentType':incidentList[i].incidentTypeS,
                         'weather':incidentList[i].weather,
                         'vehicleType':incidentList[i].vehicleType,
                         'drivingSide':incidentList[i].drivingSide,

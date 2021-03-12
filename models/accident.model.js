@@ -12,7 +12,14 @@ const accidentSchema = new Schema({
   licenseIssueDate: { type: Date },
   drivingSide: { type: String },
   severity: { type: String },
-  reason: { type: String },
+  reason: { type: String }, //reason field should be depreciated
+
+  drowsiness: { type: Boolean }, //Reasons New
+  enough_gap: { type: Boolean },
+  animal_crossing_problem: { type: Boolean },
+  vehicle_condition: { type: Boolean },
+  roadSurface: { type: String }, //Dry/Wet
+
   kmPost: { type: Number },
   suburb: { type: String },
   operatedSpeed: { type: Number },

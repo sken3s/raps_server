@@ -19,6 +19,11 @@ router.route('/submit').post((req, res) => {
     kmPost  ,
     suburb,
     operatedSpeed,
+    drowsiness,
+    enough_gap,
+    animal_crossing_problem,
+    vehicle_condition,
+    roadSurface,
     sessionToken
 } = body;
   //Data constraints
@@ -65,6 +70,11 @@ router.route('/submit').post((req, res) => {
                  newAccident.suburb = suburb;
                  newAccident.operatedSpeed = operatedSpeed;
                  newAccident.status = "reported";
+                 newAccident.drowsiness=drowsiness,
+                 newAccident.enough_gap=enough_gap,
+                 newAccident.animal_crossing_problem=animal_crossing_problem,
+                 newAccident.vehicle_condition=vehicle_condition,
+                 newAccident.roadSurface=roadSurface,
                  newAccident.sessionToken = sessionToken;
                  
                  newAccident.save()
