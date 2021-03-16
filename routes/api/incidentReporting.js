@@ -45,7 +45,8 @@ router.route("/submit").post((req, res) => {
           message: "Error:Invalid Session",
         });
       } else {
-        //save to database
+        //update to database
+
         const newIncident = new IncidentReport();
 
         newIncident.reporterName = reporterName;
@@ -74,6 +75,88 @@ router.route("/submit").post((req, res) => {
               message: "Error:Data Validation Error",
             })
           );
+      }
+    }
+  );
+});
+
+//Submit (post request)
+router.route("/update").post((req, res) => {
+  const { body } = req;
+  const {
+    id,
+    reporterName,
+    incidentType,
+    weather,
+    vehicleType,
+    drivingSide,
+    severity,
+    kmPost,
+    suburb,
+    operatedSpeed,
+    incidentDescription,
+    sessionToken,
+  } = body;
+  //Data constraints
+
+  if (!id || id.length != 24) {
+    return res.send({
+      success: false,
+      message: "Error: Incident invalid." + id,
+    });
+  }
+
+  if (!sessionToken || sessionToken.length != 24) {
+    return res.send({
+      success: false,
+      message: "Error: Session Token invalid.",
+    });
+  }
+
+  //validating session
+  DriverSession.find(
+    {
+      _id: sessionToken,
+      isDeleted: false,
+    },
+    (err, sessions) => {
+      if (err) {
+        return res.send({
+          success: false,
+          message: "Error:Server error or Session not found",
+        });
+      }
+      if (sessions.length != 1) {
+        return res.send({
+          success: false,
+          message: "Error:Invalid Session",
+        });
+      } else {
+        //update dB
+        const updateIncident = new IncidentReport();
+
+        updateIncident.reporterName = reporterName;
+        updateIncident.incidentType = incidentType;
+        updateIncident.weather = weather;
+        updateIncident.vehicleType = vehicleType;
+        updateIncident.drivingSide = drivingSide;
+        updateIncident.severity = severity;
+        updateIncident.kmPost = kmPost;
+        updateIncident.suburb = suburb;
+        updateIncident.operatedSpeed = operatedSpeed;
+        updateIncident.incidentDescription = incidentDescription;
+        updateIncident.sessionToken = sessionToken;
+
+        console.log(updateIncident);
+        IncidentReport.findOneAndUpdate(
+          { _id: id },
+          updateIncident,
+          { upsert: true },
+          function (err, doc) {
+            if (err) return res.send(500, { error: err });
+            return res.send("Succesfully saved.");
+          }
+        );
       }
     }
   );
