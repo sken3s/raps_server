@@ -2,6 +2,32 @@ const router = require('express').Router();
 let Accident = require('../../models/accident.model');
 let PoliceSession = require('../../models/policeSession.model');
 
+//Predictor calculation functions
+function getHourCat(datetime){
+    if(!datetime){
+      return null;
+    }
+    const d=new Date(datetime);
+    const h= d.getHours();
+    if(h<5 || h>20){
+        return 0; //free of charge
+    }else if(h<9 || h>15){
+        return 1; //rush
+    }else
+        return 2;//normal
+}
+function getAgeCat(age){
+    if(!age){
+      return null;
+    }
+    if(age<30){
+        return 0; //young
+    }else if(h<50){
+        return 1; //mid
+    }else
+        return 2;//old
+}
+
 //Submit (post request)
 router.route('/submit').post((req, res) => {
   const { body } = req;
@@ -57,7 +83,9 @@ router.route('/submit').post((req, res) => {
                 //save to database
                 const  newAccident = new Accident();
                  newAccident.datetime = datetime;
+                 newAccident.hour_cat = getHourCat(datetime);
                  newAccident.driverAge = driverAge;
+                 newAccident.age_cat = getAgeCat(driverAge);;
                  newAccident.driverGender = driverGender;
                  newAccident.weather = weather;
                  newAccident.vehicleType = vehicleType;
@@ -81,7 +109,8 @@ router.route('/submit').post((req, res) => {
                 .then(() => 
                     res.send({
                     success:true,
-                    message:'Accident submitted successfully.'
+                    message:'Accident submitted successfully.',
+                    data:newAccident
                 })
                 )
                 .catch(err => res.send({
