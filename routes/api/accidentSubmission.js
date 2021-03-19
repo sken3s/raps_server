@@ -16,6 +16,50 @@ function getHourCat(datetime){
     }else
         return 2;//normal
 }
+
+function getDayCat(datetime){
+    if(!datetime){
+      return null;
+    }
+    const d=new Date(datetime);
+    const h= d.getDay();
+    //check public holiday? return 2
+    if(h==0||h==6){
+        return 1; //weekend
+    }else
+        return 0;//weekday
+}
+
+function getMonthCat(datetime){
+    if(!datetime){
+      return null;
+    }
+    const d=new Date(datetime);
+    const m= d.getMonth();
+    //check public holiday? return 2
+    if(m<2||m>8){
+        return true; //offpeak
+    }else
+        return false;//peak
+}
+
+function getVision(datetime,weather){
+    if(!datetime){
+      return null;
+    }
+    const d=new Date(datetime);
+    const t= d.getHours()*60+d.getMinutes;
+    if(t<330||t>=1140){
+        return 0; //poor
+    }else if(t<420||t>=1050){
+        return 1; //glare
+    }else if(weather==true){
+        return 3; //blurred
+    }else{
+        return 2; //normal
+    }
+}
+
 function getAgeCat(age){
     if(!age){
       return null;
@@ -28,6 +72,54 @@ function getAgeCat(age){
         return 2;//old
 }
 
+function getKmCat(kmPost){
+    if(!kmPost){
+      return null;
+    }
+    if(kmPost<26){
+        return 0; //km1
+    }else if(kmPost<51){
+        return 1; //km2
+    }else if(kmPost<76){
+        return 2; //km3
+    }else if(kmPost<101){
+        return 3; //km4
+    }else{
+        return 5; //km6
+    }
+}
+
+function getDrowsiness(datetime){
+    if(!datetime){
+      return null;
+    }
+    const d=new Date(datetime);
+    const t= d.getHours()*60+d.getMinutes;
+    if(t>=480 && t<600 || t>=840 && t<960 || t>=1260 || t<300){
+        return true;
+    }else{
+        return false;
+    }
+}
+
+function getAnimalCrossing(datetime,weather){
+    if(!datetime){
+      return null;
+    }
+    const d=new Date(datetime);
+    const t= d.getHours()*60+d.getMinutes;
+    //logic should be implemened
+    return false;
+}
+
+function getEnoughGap(reason){
+    if(reason==3){
+        return false;
+    }else{
+        return true;
+    }
+}
+
 //Submit (post request)
 router.route('/submit').post((req, res) => {
   const { body } = req;
@@ -36,6 +128,7 @@ router.route('/submit').post((req, res) => {
     driverAge,
     driverGender,
     weather ,
+    roadSurface,
     vehicleType ,
     vehicleYOM  ,
     licenseIssueDate,
@@ -45,11 +138,7 @@ router.route('/submit').post((req, res) => {
     kmPost  ,
     suburb,
     operatedSpeed,
-    drowsiness,
-    enough_gap,
-    animal_crossing_problem,
     vehicle_condition,
-    roadSurface,
     sessionToken
 } = body;
   //Data constraints
@@ -83,11 +172,10 @@ router.route('/submit').post((req, res) => {
                 //save to database
                 const  newAccident = new Accident();
                  newAccident.datetime = datetime;
-                 newAccident.hour_cat = getHourCat(datetime);
                  newAccident.driverAge = driverAge;
-                 newAccident.age_cat = getAgeCat(driverAge);;
                  newAccident.driverGender = driverGender;
                  newAccident.weather = weather;
+                 newAccident.roadSurface=roadSurface;
                  newAccident.vehicleType = vehicleType;
                  newAccident.vehicleYOM = vehicleYOM;
                  newAccident.licenseIssueDate = licenseIssueDate;
@@ -97,14 +185,19 @@ router.route('/submit').post((req, res) => {
                  newAccident.kmPost = kmPost;
                  newAccident.suburb = suburb;
                  newAccident.operatedSpeed = operatedSpeed;
-                 newAccident.status = "reported";
-                 newAccident.drowsiness=drowsiness,
-                 newAccident.enough_gap=enough_gap,
-                 newAccident.animal_crossing_problem=animal_crossing_problem,
-                 newAccident.vehicle_condition=vehicle_condition,
-                 newAccident.roadSurface=roadSurface,
+                 newAccident.vehicle_condition=vehicle_condition;
+                 newAccident.status = 0;
+                 newAccident.isDeleted = false;           
                  newAccident.sessionToken = sessionToken;
-                 
+                 newAccident.day_cat = getDayCat(datetime);
+                 newAccident.hour_cat = getHourCat(datetime);
+                 newAccident.month_cat = getMonthCat(datetime);
+                 newAccident.vision = getVision(datetime,weather);
+                 newAccident.age_cat = getAgeCat(driverAge);
+                 newAccident.km_cat = getKmCat(kmPost);
+                 newAccident.drowsiness = getDrowsiness(datetime);
+                 newAccident.enough_gap = getEnoughGap(reason);
+                 newAccident.animal_crossing_problem=getAnimalCrossing(datetime,weather);
                  newAccident.save()
                 .then(() => 
                     res.send({
@@ -129,7 +222,7 @@ router.route('/submit').post((req, res) => {
 //List All Accidents
 router.route('/list').get((req,res) => {
     Accident.find({   
-            //finds without filter
+        isDeleted:false
         }, (err,accidentList) =>{
             if(err){
                 return res.send({
@@ -145,6 +238,7 @@ router.route('/list').get((req,res) => {
                         'driverAge':accidentList[i].driverAge,
                         'driverGender':accidentList[i].driverGender,
                         'weather':accidentList[i].weather,
+                        'roadSurface':accidentList[i].roadSurface,
                         'vehicleType':accidentList[i].vehicleType,
                         'vehicleYOM':accidentList[i].vehicleYOM,
                         'licenseIssueDate':accidentList[i].licenseIssueDate,
@@ -154,7 +248,17 @@ router.route('/list').get((req,res) => {
                         'kmPost':accidentList[i].kmPost,
                         'suburb':accidentList[i].suburb,
                         'operatedSpeed':accidentList[i].operatedSpeed,
-                        'status':accidentList[i].status
+                        'vehicle_condition':accidentList[i].vehicle_condition,
+                        'status':accidentList[i].status,
+                        'day_cat':accidentList[i].day_cat,
+                        'hour_cat':accidentList[i].hour_cat,
+                        'month_cat':accidentList[i].month_cat,
+                        'vision':accidentList[i].vision,
+                        'age_cat':accidentList[i].age_cat,
+                        'km_cat':accidentList[i].km_cat,
+                        'drowsiness':accidentList[i].drowsiness,
+                        'enough_gap':accidentList[i].enough_gap,
+                        'animal_crossing_problem':accidentList[i].animal_crossing_problem
                 })
                 }
 
