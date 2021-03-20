@@ -15,7 +15,7 @@ const accidentSchema = new Schema({
   severity: { type: Number, min:0, max:2}, //0:property damage, 1:injury, 2:mortality
   reason: { type: Number, min:0, max:5}, //0:Animal Crossing, 1:Vehicle issue, 2:Speed, 3:Tailgating, 4:Sleep,5:Slipping  
   vehicle_condition: { type: Boolean },
-  kmPost: { type: Number, min:0, max:126},
+  kmPost: { type: Number, min:0, max:127},
   suburb: { type: Number, min:0, max:10},
   operatedSpeed: { type: Number },
   sessionToken:{type:String},

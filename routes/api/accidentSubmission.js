@@ -66,7 +66,7 @@ function getAgeCat(age) {
     }
     if (age < 30) {
         return 0; //young
-    } else if (h < 50) {
+    } else if (age < 50) {
         return 1; //mid
     } else
         return 2;//old
