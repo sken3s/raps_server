@@ -34,6 +34,7 @@ const eTeamRouter = require('./routes/api/eTeam')
 const driverRouter = require('./routes/api/driverSignin')
 const incidentRouter = require('./routes/api/incidentReporting')
 const vehicleRouter = require('./routes/api/driverVehicle')
+const publicHolidayRouter = require('./routes/api/publicHoliday')
 
 app.use('/police',policeRouter);
 app.use('/accident',accidentRouter);
@@ -43,6 +44,7 @@ app.use('/driver', driverRouter);
 app.use('/incident', incidentRouter);
 app.use('/vehicle', vehicleRouter);
 app.use("/epoints/", ePointRouter);
+app.use("/holiday", publicHolidayRouter);
 
 //Run server
 app.listen(port, () => {
