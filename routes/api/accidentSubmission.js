@@ -201,7 +201,6 @@ router.route('/submit').post((req, res) => {
                     newAccident.suburb = suburb;
                     newAccident.operatedSpeed = operatedSpeed;
                     newAccident.vehicle_condition = vehicle_condition;
-                    newAccident.status = 0;
                     newAccident.isDeleted = false;
                     newAccident.sessionToken = sessionToken;
                     newAccident.day_cat = getDayCat(datetime, isPublicHoliday);
@@ -267,7 +266,6 @@ router.route('/list').get((req, res) => {
                     'suburb': accidentList[i].suburb,
                     'operatedSpeed': accidentList[i].operatedSpeed,
                     'vehicle_condition': accidentList[i].vehicle_condition,
-                    'status': accidentList[i].status,
                     'day_cat': accidentList[i].day_cat,
                     'hour_cat': accidentList[i].hour_cat,
                     'month_cat': accidentList[i].month_cat,
@@ -367,7 +365,6 @@ router.route('/update').post((req, res) => {
         suburb,
         operatedSpeed,
         vehicle_condition,
-        status,
         sessionToken
     } = body;
     //Data constraints
@@ -440,7 +437,6 @@ router.route('/update').post((req, res) => {
                     reason: reason,
                     kmPost: kmPost,
                     suburb: suburb,
-                    status: status,
                     operatedSpeed: operatedSpeed,
                     vehicle_condition: vehicle_condition,
                     day_cat: getDayCat(datetime,isPublicHoliday),

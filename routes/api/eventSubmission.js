@@ -51,7 +51,6 @@ router.route('/submit').post((req, res) => {
                  newEvent.kmPost = kmPost;
                  newEvent.suburb = suburb;
                  newEvent.sessionToken = sessionToken;
-                 newEvent.status = "reported";
                  newEvent.save()
                 .then(() => 
                     res.send({
@@ -93,8 +92,7 @@ router.route('/list').get((req,res) => {
                         'drivingSide':eventList[i].drivingSide,
                         'severity':eventList[i].severity,
                         'kmPost':eventList[i].kmPost,
-                        'suburb':eventList[i].suburb,
-                        'status':eventList[i].status
+                        'suburb':eventList[i].suburb
                 })
                 }
 

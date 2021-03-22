@@ -12,6 +12,8 @@ const IncidentReportSchema = new Schema({
   suburb: { type: Number, min:0, max:10},
   status: { type: Number, min:0,max:2},  //status of accident: 1:reported,2:eTeam dispatched,3:handled },
   sessionToken:{type:String},
+  driverUsername:{type:String}, //driver who reported
+  eTeamUsername:{type:String} //eTeam who is assigned
 }, {
   timestamps: true,
 });

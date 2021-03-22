@@ -15,7 +15,7 @@ router.route("/submit").post((req, res) => {
     kmPost,
     suburb,
     operatedSpeed,
-    sessionToken,
+    sessionToken
   } = body;
   //Data constraints
 
@@ -56,7 +56,9 @@ router.route("/submit").post((req, res) => {
         newIncident.kmPost = kmPost;
         newIncident.suburb = suburb;
         newIncident.operatedSpeed = operatedSpeed;
+        newIncident.status = 0;
         newIncident.sessionToken = sessionToken;
+        newIncident.driverUsername = sessions[0].username;
 
         newIncident
           .save()
