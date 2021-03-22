@@ -1,6 +1,7 @@
 const router = require('express').Router();
 let Accident = require('../../models/accident.model');
 let PoliceSession = require('../../models/policeSession.model');
+let PublicHoliday = require('../../models/publicHoliday.model');
 
 //Predictor calculation functions
 function getHourCat(datetime) {
@@ -17,17 +18,16 @@ function getHourCat(datetime) {
         return 2;//normal
 }
 
-function getDayCat(datetime) {
-    if (!datetime) {
-        return null;
-    }
-    const d = new Date(datetime);
+function getDayCat(datetime, isPublicHoliday) {
+    const d = new Date(datetime.toString());
     const h = d.getDay();
-    //check public holiday? return 2
-    if (h == 0 || h == 6) {
+    if (isPublicHoliday) {
+        return 2; //pubHoliday
+    } else if (h == 0 || h == 6) {
         return 1; //weekend
-    } else
-        return 0;//weekday
+    } else {
+        return 0; //weekday
+    }
 }
 
 function getMonthCat(datetime) {
@@ -91,7 +91,7 @@ function getDrowsiness(datetime) {
         return null;
     }
     const d = new Date(datetime);
-    const t = d.getHours() * 60 + d.getMinutes;
+    const t = d.getHours() * 60 + d.getMinutes();
     if (t >= 480 && t < 600 || t >= 840 && t < 960 || t >= 1260 || t < 300) {
         return true;
     } else {
@@ -138,6 +138,7 @@ router.route('/submit').post((req, res) => {
         vehicle_condition,
         sessionToken
     } = body;
+    var isPublicHoliday = false;
     //Data constraints
     if (!datetime) {
         return res.send({
@@ -168,52 +169,70 @@ router.route('/submit').post((req, res) => {
                 message: 'Error:Invalid Session'
             })
         } else {
-            //save to database
-            const newAccident = new Accident();
-            newAccident.datetime = datetime;
-            newAccident.driverAge = driverAge;
-            newAccident.driverGender = driverGender;
-            newAccident.weather = weather;
-            newAccident.roadSurface = roadSurface;
-            newAccident.vehicleType = vehicleType;
-            newAccident.vehicleYOM = vehicleYOM;
-            newAccident.licenseIssueDate = licenseIssueDate;
-            newAccident.drivingSide = drivingSide;
-            newAccident.severity = severity;
-            newAccident.reason = reason;
-            newAccident.kmPost = kmPost;
-            newAccident.suburb = suburb;
-            newAccident.operatedSpeed = operatedSpeed;
-            newAccident.vehicle_condition = vehicle_condition;
-            newAccident.status = 0;
-            newAccident.isDeleted = false;
-            newAccident.sessionToken = sessionToken;
-            newAccident.day_cat = getDayCat(datetime);
-            newAccident.hour_cat = getHourCat(datetime);
-            newAccident.month_cat = getMonthCat(datetime);
-            newAccident.vision = getVision(datetime, weather);
-            newAccident.age_cat = getAgeCat(driverAge);
-            newAccident.km_cat = getKmCat(kmPost);
-            newAccident.drowsiness = getDrowsiness(datetime);
-            newAccident.enough_gap = getEnoughGap(reason);
-            newAccident.animal_crossing_problem = getAnimalCrossing(datetime, weather);
-            newAccident.save()
-                .then(() =>
-                    res.send({
-                        success: true,
-                        message: 'Accident submitted successfully.',
-                        data: newAccident
-                    })
-                )
-                .catch(err => res.send({
-                    success: false,
-                    message: 'Error:Data Validation Error'
-                })
-                )
+            //check if publicHoliday
+            isPublicHoliday = false;
+            const d = new Date(datetime.toString());
+            const gte = new Date(d.setDate(d.getDate() - 1))
+            const lt = new Date(d.setDate(d.getDate() + 1))
+            PublicHoliday.find({
+                date: { "$lt": lt, "$gte": gte },
+            }, (err, pubhollist) => {
+                if (err) {
+                    pass;
+                } else {
+                    if (pubhollist.length > 0) {
+                        //holiday found
+                        isPublicHoliday = true;
+                    }
+                    //save to database
+                    const newAccident = new Accident();
+                    newAccident.datetime = datetime;
+                    newAccident.driverAge = driverAge;
+                    newAccident.driverGender = driverGender;
+                    newAccident.weather = weather;
+                    newAccident.roadSurface = roadSurface;
+                    newAccident.vehicleType = vehicleType;
+                    newAccident.vehicleYOM = vehicleYOM;
+                    newAccident.licenseIssueDate = licenseIssueDate;
+                    newAccident.drivingSide = drivingSide;
+                    newAccident.severity = severity;
+                    newAccident.reason = reason;
+                    newAccident.kmPost = kmPost;
+                    newAccident.suburb = suburb;
+                    newAccident.operatedSpeed = operatedSpeed;
+                    newAccident.vehicle_condition = vehicle_condition;
+                    newAccident.status = 0;
+                    newAccident.isDeleted = false;
+                    newAccident.sessionToken = sessionToken;
+                    newAccident.day_cat = getDayCat(datetime, isPublicHoliday);
+                    newAccident.hour_cat = getHourCat(datetime);
+                    newAccident.month_cat = getMonthCat(datetime);
+                    newAccident.vision = getVision(datetime, weather);
+                    newAccident.age_cat = getAgeCat(driverAge);
+                    newAccident.km_cat = getKmCat(kmPost);
+                    newAccident.drowsiness = getDrowsiness(datetime);
+                    newAccident.enough_gap = getEnoughGap(reason);
+                    newAccident.animal_crossing_problem = getAnimalCrossing(datetime, weather);
+                    newAccident.save()
+                        .then(() =>
+                            res.send({
+                                success: true,
+                                message: 'Accident submitted successfully.',
+                                data: newAccident
+                            })
+                        )
+                        .catch(err => res.send({
+                            success: false,
+                            message: 'Error:Data Validation Error'
+                        })
+                        )
 
+                }
+            })
         }
     }
     )
+
 });
 
 
@@ -387,7 +406,22 @@ router.route('/update').post((req, res) => {
                 message: 'Error:Invalid Session'
             })
         } else {
-            //validating accident update
+            //check if publicHoliday
+            isPublicHoliday = false;
+            const d = new Date(datetime.toString());
+            const gte = new Date(d.setDate(d.getDate() - 1))
+            const lt = new Date(d.setDate(d.getDate() + 1))
+            PublicHoliday.find({
+                date: { "$lt": lt, "$gte": gte },
+            }, (err1, pubhollist) => {
+                if (err1) {
+                    pass;
+                } else {
+                    if (pubhollist.length > 0) {
+                        //holiday found
+                        isPublicHoliday = true;
+                    }
+                    //validating accident update
             Accident.findOneAndUpdate({
                 _id: id,
                 isDeleted: false
@@ -409,7 +443,7 @@ router.route('/update').post((req, res) => {
                     status: status,
                     operatedSpeed: operatedSpeed,
                     vehicle_condition: vehicle_condition,
-                    day_cat: getDayCat(datetime),
+                    day_cat: getDayCat(datetime,isPublicHoliday),
                     hour_cat: getHourCat(datetime),
                     month_cat: getMonthCat(datetime),
                     vision: getVision(datetime, weather),
@@ -422,12 +456,14 @@ router.route('/update').post((req, res) => {
             }, null,
                 (err, accident) => {
                     if (err) {
+                        console.log("update terminated.")
                         return res.send({
                             success: false,
                             message: 'Error: Server error'
                         })
                     }
                     else {
+                        console.log("update completed")
                         return res.send({
                             success: true,
                             message: 'Accident Updated.',
@@ -435,6 +471,9 @@ router.route('/update').post((req, res) => {
                         })
                     }
                 })
+                }
+            })
+            
         }
     }
     )

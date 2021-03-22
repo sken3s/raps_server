@@ -77,6 +77,7 @@ router.route('/list').get((req,res) => {
             }else{
                 let data=[];
                 for(i in publicHolidayList){
+                    console.log(publicHolidayList[i].date)
                    data.push({
                         'id':publicHolidayList[i]._id,
                         'date':publicHolidayList[i].date, 
