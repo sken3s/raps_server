@@ -19,7 +19,6 @@ const accidentSchema = new Schema({
   suburb: { type: Number, min:0, max:10},
   operatedSpeed: { type: Number },
   sessionToken:{type:String},
-  status:{type:Number, min:0,max:2},  //status of accident: 1:reported,2:eTeam dispatched,3:handled
   isDeleted:{type:Boolean},
   //derived
   day_cat: { type: Number,min:0,max:2 }, //0:weekday,1:weekend,2:publicholiday

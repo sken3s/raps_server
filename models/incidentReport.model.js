@@ -5,13 +5,12 @@ const Schema = mongoose.Schema;
 const IncidentReportSchema = new Schema({
   datetime: { type: Date, default:Date.now},
   isAccident:{type: Boolean}, //True: Accident, False:Event
-  weather: { type: String },
-  vehicleType: { type: String },
-  drivingSide: { type: String },
-  severity: { type: String },
-  kmPost: { type: Number },
-  suburb: { type: String },
-  operatedSpeed: { type: Number },
+  weather: { type: Boolean }, ////0:clear, 1:rain
+  vehicleType: { type: Number }, //0:car, 1:hv, 2:dualpurpose
+  drivingSide: { type: Boolean }, //0:cmbtomatara, 1:mataratocmb
+  kmPost: { type: Number, min:0, max:127},
+  suburb: { type: Number, min:0, max:10},
+  status: { type: Number, min:0,max:2},  //status of accident: 1:reported,2:eTeam dispatched,3:handled },
   sessionToken:{type:String},
 }, {
   timestamps: true,
