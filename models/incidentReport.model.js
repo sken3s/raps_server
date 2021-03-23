@@ -11,6 +11,8 @@ const IncidentReportSchema = new Schema({
   kmPost: { type: Number, min:0, max:127},
   suburb: { type: Number, min:0, max:10},
   status: { type: Number, min:0,max:2},  //status of accident: 1:reported,2:eTeam dispatched,3:handled },
+  lat: { type: String },
+  lng: { type: String },
   sessionToken:{type:String},
   driverUsername:{type:String}, //driver who reported
   eTeamUsername:{type:String} //eTeam who is assigned
