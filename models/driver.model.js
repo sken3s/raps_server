@@ -7,9 +7,10 @@ const driverSchema = new Schema({
   name: { type: String, default:'' },
   password: { type: String, required: true },
   age: { type: Number, required: true },
-  gender: { type: String, required: true },
+  gender: { type: Boolean, required: true }, //0:male, 1:female
   licenseIssueDate: { type: Date, required: true },
-  isDeleted:{type:Boolean, default:false} //whether user is deleted or not 
+  isDeleted:{type:Boolean, default:false}, //whether user is deleted or not 
+  isBlocked:{type:Boolean, default:false} //block from reporting incidents
 }, {
   timestamps: true,
 });

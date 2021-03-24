@@ -18,8 +18,9 @@ router.route('/list').get((req,res) => {
                 let data=[];
                 for(i in policeList){
                     let username= policeList[i].username;
+                    let name = policeList[i].name;
                     let adminRights = policeList[i].adminRights;
-                   data.push({'username':username, 'adminRights':adminRights})
+                   data.push({'username':username,'name':name, 'adminRights':adminRights})
                 }
 
                 return res.send({
@@ -291,6 +292,67 @@ router.route('/delete').delete((req, res) => {
           }
           })
       });
+
+//Updating user details
+router.route('/update').post((req, res) => {
+    const { body } = req;
+    const {username, name, adminRights, sessionToken} = body; //username of account to be updated, session token of an admin should be added
+    //Data constraints
+    if(!username || username.length<4){
+        return res.send({
+            success:false,
+            message:'Error: Username invalid!.',
+            invalid_username: username
+        })}
+      if(!sessionToken|| sessionToken.length!=24){
+          return res.send({
+              success:false,
+              message:'Error: Session Token invalid.'
+          })} 
+      //validating admin session
+      PoliceSession.find({   
+          _id:sessionToken, 
+          isDeleted:false,
+          adminRights:true
+      }, (err,sessions) =>{
+          if(err){
+              return res.send({
+                  success:false,
+                  message:'Error:Server error or Session not found'
+              })
+          }
+          if(sessions.length!=1 || sessions[0].isDeleted){
+              return res.send({
+                  success:false,
+                  message:'Error:Invalid Session'
+              })
+          }else{
+              //validating police user update
+              Police.findOneAndUpdate({
+                  username:username,
+                  isDeleted:false
+              }, {$set:{name:name,adminRights:adminRights}},null,
+              (err, police)=>{
+                  if(err){
+                      return res.send({
+                          success:false,
+                          message:'Error: Server error'
+                      })
+                  }
+                  else{
+                      return res.send({
+                          success:true,
+                          message:'Police User Updated.',
+                          new_name: name,
+                          new_adminRights:adminRights
+                      })
+                  }
+              })
+          }
+          })
+      });
+
+
 
 
 
