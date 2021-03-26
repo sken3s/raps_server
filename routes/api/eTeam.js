@@ -1,9 +1,11 @@
 const router = require("express").Router();
 let ETeam = require("../../models/eTeam.model");
 let ETeamSession = require('../../models/eTeamSession.model');
+let IncidentReport = require("../../models/incidentReport.model");
 let Accident = require('../../models/accident.model');
 let Event = require('../../models/event.model');
 
+//list eteams
 router.route("/list").get((req, res) => {
   ETeam.find()
     .then((teams) => res.json(teams))
@@ -253,5 +255,74 @@ router.route('/location').post((req, res) => {
           })
       });
 
+//Listing Incidents filtered by status(reported) and drivingSide
+router.route('/incidents/reported').post((req, res) => {
+    const { body } = req;
+    const { drivingSide, sessionToken} = body; // session token of eTeamSession
+        //Data constraints
+      if(typeof drivingSide != "boolean"){
+            return res.send({
+                success:false,
+                message:'Error: Driving Side invalid.'
+            })}
+      if(!sessionToken|| sessionToken.length!=24){
+          return res.send({
+              success:false,
+              message:'Error: Session Token invalid.'
+          })}
+      //validating session
+      ETeamSession.find({   
+          _id:sessionToken, 
+          isDeleted:false
+      }, (err,sessions) =>{
+          if(err){
+              return res.send({
+                  success:false,
+                  message:'Error:Server error or Session not found'
+              })
+          }
+          if(sessions.length!=1 || sessions[0].isDeleted){
+              return res.send({
+                  success:false,
+                  message:'Error:Invalid Session'
+              })
+          }else{
+              //incident list
+              IncidentReport.find(
+                {
+                  status:0,
+                  drivingSide:drivingSide
+                },
+                (err, incidentList) => {
+                  if (err) {
+                    return res.send({
+                      success: false,
+                      message: "Error:Server error",
+                    });
+                  } else {
+                    let data = [];
+                    for (i in incidentList) {
+                      data.push({
+                        id: incidentList[i]._id,
+                        datetime: incidentList[i].datetime,
+                        isAccident: incidentList[i].isAccident,
+                        drivingSide: incidentList[i].drivingSide,
+                        lat: incidentList[i].lat,
+                        lng: incidentList[i].lng
+                      });
+                    }
+            
+                    return res.send({
+                      success: true,
+                      message: "List received",
+                      data: data,
+                    });
+                  }
+                }
+              );
+                  }
+              }) 
+      });
+  
 
 module.exports = router;
