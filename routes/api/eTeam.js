@@ -327,7 +327,72 @@ router.route('/incidents/reported').post((req, res) => {
               }) 
       });
 
-//Chosing incident for handling. Transaction not working
+//Listing Incidents filtered by status(handled) and username
+router.route('/incidents/handled').post((req, res) => {
+    const { body } = req;
+    const { sessionToken} = body; // session token of eTeamSession
+        //Data constraints
+      if(!sessionToken|| sessionToken.length!=24){
+          return res.send({
+              success:false,
+              message:'Error: Session Token invalid.'
+          })}
+      //validating session
+      ETeamSession.find({   
+          _id:sessionToken, 
+          isDeleted:false
+      }, (err,sessions) =>{
+          if(err){
+              return res.send({
+                  success:false,
+                  message:'Error:Server error or Session not found'
+              })
+          }
+          if(sessions.length!=1 || sessions[0].isDeleted){
+              return res.send({
+                  success:false,
+                  message:'Error:Invalid Session'
+              })
+          }else{
+              //incident list
+              IncidentReport.find(
+                {
+                  status:2,
+                  eTeamUsername:sessions[0].username
+                },
+                (err, incidentList) => {
+                  if (err) {
+                    return res.send({
+                      success: false,
+                      message: "Error:Server error",
+                    });
+                  } else {
+                    let data = [];
+                    for (i in incidentList) {
+                      data.push({
+                        id: incidentList[i]._id,
+                        datetime: incidentList[i].datetime,
+                        isAccident: incidentList[i].isAccident,
+                        drivingSide: incidentList[i].drivingSide,
+                        lat: incidentList[i].lat,
+                        lng: incidentList[i].lng,
+                        driverUsername:  incidentList[i].driverUsername
+                      });
+                    }
+            
+                    return res.send({
+                      success: true,
+                      message: "List received",
+                      data: data,
+                    });
+                  }
+                }
+              );
+                  }
+              }) 
+      });
+
+//Chosing incident for handling.
 router.route('/dispatch').post( async (req, res) => {
     const { body } = req;
     const { id, sessionToken} = body; // id of incident, session token of eTeamSession
@@ -385,15 +450,16 @@ router.route('/dispatch').post( async (req, res) => {
                             await transactionSession.abortTransaction()
                             res.send('ETeam unavailable '+sessions[0].username)
                             transactionSession.endSession()
-                        }
-                        let doc2 = await IncidentReport.findOneAndUpdate(
-                            { _id:id, eTeamUsername:null, status:0 }, { $set: { eTeamUsername: sessions[0].username, status:1 } }, {transactionSession});
-                        
-                        if(!doc2){
-                            await transactionSession.abortTransaction()
-                            res.send('Incident unavailable')
-                            transactionSession.endSession()
-                        }
+                        }else{
+                            let doc2 = await IncidentReport.findOneAndUpdate(
+                                { _id:id, eTeamUsername:null, status:0 }, { $set: { eTeamUsername: sessions[0].username, status:1 } }, {transactionSession});
+                            
+                            if(!doc2){
+                                await transactionSession.abortTransaction()
+                                res.send('Incident unavailable')
+                                transactionSession.endSession()
+                            }
+                        }   
                 
                         await transactionSession.commitTransaction()
                         transactionSession.endSession()
@@ -419,7 +485,7 @@ router.route('/dispatch').post( async (req, res) => {
       });
 
 
-//Complete handling an incident. Transaction not working
+//Complete handling an incident.
 router.route('/complete').post( async (req, res) => {
     const { body } = req;
     const { id, sessionToken} = body; // id of incident, session token of eTeamSession
@@ -477,15 +543,17 @@ router.route('/complete').post( async (req, res) => {
                             await transactionSession.abortTransaction()
                             res.send('ETeam unavailable '+sessions[0].username)
                             transactionSession.endSession()
+                        }else{
+                            let doc2 = await IncidentReport.findOneAndUpdate(
+                                { _id:id, eTeamUsername:sessions[0].username, status:1 }, { $set: { status:2 } }, {transactionSession});
+                            
+                            if(!doc2){
+                                await transactionSession.abortTransaction()
+                                res.send('Incident unavailable')
+                                transactionSession.endSession()
+                            }
                         }
-                        let doc2 = await IncidentReport.findOneAndUpdate(
-                            { _id:id, eTeamUsername:sessions[0].username, status:1 }, { $set: { status:2 } }, {transactionSession});
                         
-                        if(!doc2){
-                            await transactionSession.abortTransaction()
-                            res.send('Incident unavailable')
-                            transactionSession.endSession()
-                        }
                 
                         await transactionSession.commitTransaction()
                         transactionSession.endSession()
@@ -510,7 +578,7 @@ router.route('/complete').post( async (req, res) => {
             }) 
       });
 
-//Report the incident as a false alarm. Blocks the driver who reported from further incident reports. Transaction not working
+//NOT WORKING. Report the incident as a false alarm. Blocks the driver who reported from further incident reports.
 router.route('/falsealarm').post( async (req, res) => {
     const { body } = req;
     const { id, sessionToken} = body; // id of incident, session token of eTeamSession
@@ -568,32 +636,35 @@ router.route('/falsealarm').post( async (req, res) => {
                             await transactionSession.abortTransaction()
                             res.send('ETeam unavailable '+sessions[0].username)
                             transactionSession.endSession()
-                        }
-                        let doc2 = await IncidentReport.findOneAndDelete(
-                            { _id:id, eTeamUsername:incidentList[0].username, status:1 }, {transactionSession});
-                        
-                        if(!doc2){
-                            await transactionSession.abortTransaction()
-                            res.send('Incident unavailable')
-                            transactionSession.endSession()
+                        }else{
+                            let doc2 = await IncidentReport.findOneAndDelete(
+                                { _id:id, eTeamUsername:sessions[0].username, status:1 }, {transactionSession});
+                            
+                            if(!doc2){
+                                    await transactionSession.abortTransaction()
+                                    res.send('Incident unavailable')
+                                    transactionSession.endSession()
+                                }
+                            else{
+                                let doc3 = await Driver.findOneAndUpdate(
+                                    { username: incidentList[0].username }, { $set: { isBlocked: true } }, {transactionSession});
+                                
+                                if(!doc3){
+                                    await transactionSession.abortTransaction()
+                                    res.send('Driver unavailable '+incidentList[0].username)
+                                    transactionSession.endSession()
+                                }
+                                else{
+                                    await DriverSession.updateMany(
+                                        { username: incidentList[0].username }, { $set: { isBlocked: true } }, {transactionSession});               
+                                    await transactionSession.commitTransaction()
+                                    transactionSession.endSession()
+                                    res.send('ETeam completion transaction successfull')
+                                }
+                            }
                         }
 
-                        let doc3 = await Driver.findOneAndUpdate(
-                            { username: incidentList[0].username }, { $set: { isBlocked: true } }, {transactionSession});
-                        
-                        if(!doc3){
-                            await transactionSession.abortTransaction()
-                            res.send('Driver unavailable '+incidentList[0].username)
-                            transactionSession.endSession()
-                        }
-
-                        await DriverSession.updateMany(
-                            { username: incidentList[0].username }, { $set: { isBlocked: true } }, {transactionSession});
-                        
-                
-                        await transactionSession.commitTransaction()
-                        transactionSession.endSession()
-                        res.send('ETeam completion transaction successfull')
+       
                     } catch (err) {
                         await transactionSession.abortTransaction()
                         transactionSession.endSession()
@@ -604,8 +675,7 @@ router.route('/falsealarm').post( async (req, res) => {
           
                   return res.send({
                     success: true,
-                    message: "List received",
-                    data: data,
+                    message: "FalseAlarm reported"
                   });
                 }
               }
