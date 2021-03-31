@@ -1,6 +1,7 @@
 const router = require('express').Router();
 let Accident = require('../../models/accident.model');
 let PoliceSession = require('../../models/policeSession.model');
+let ETeamSession = require('../../models/eTeamSession.model');
 let PublicHoliday = require('../../models/publicHoliday.model');
 
 //Predictor calculation functions
@@ -117,7 +118,7 @@ function getEnoughGap(reason) {
     }
 }
 
-//Submit (post request)
+//Submit (police)
 router.route('/submit').post((req, res) => {
     const { body } = req;
     const {
@@ -234,7 +235,122 @@ router.route('/submit').post((req, res) => {
 
 });
 
+//Submit (eteam)
+router.route('/eteam/submit/').post((req, res) => {
+    const { body } = req;
+    const {
+        datetime,
+        driverAge,
+        driverGender,
+        weather,
+        roadSurface,
+        vehicleType,
+        vehicleYOM,
+        licenseIssueDate,
+        drivingSide,
+        severity,
+        reason,
+        kmPost,
+        suburb,
+        operatedSpeed,
+        vehicle_condition,
+        sessionToken
+    } = body;
+    var isPublicHoliday = false;
+    //Data constraints
+    if (!datetime) {
+        return res.send({
+            success: false,
+            message: 'Error: Date/Time invalid.'
+        })
+    }
+    if (!sessionToken || sessionToken.length != 24) {
+        return res.send({
+            success: false,
+            message: 'Error: Session Token invalid.'
+        })
+    }
+    //validating session
+    ETeamSession.find({
+        _id: sessionToken,
+        isDeleted: false
+    }, (err, sessions) => {
+        if (err) {
+            return res.send({
+                success: false,
+                message: 'Error:Server error or Session not found'
+            })
+        }
+        if (sessions.length != 1) {
+            return res.send({
+                success: false,
+                message: 'Error:Invalid Session'
+            })
+        } else {
+            //check if publicHoliday
+            isPublicHoliday = false;
+            const d = new Date(datetime.toString());
+            const gte = new Date(d.setDate(d.getDate() - 1))
+            const lt = new Date(d.setDate(d.getDate() + 1))
+            PublicHoliday.find({
+                date: { "$lt": lt, "$gte": gte },
+            }, (err, pubhollist) => {
+                if (err) {
+                    pass;
+                } else {
+                    if (pubhollist.length > 0) {
+                        //holiday found
+                        isPublicHoliday = true;
+                    }
+                    //save to database
+                    const newAccident = new Accident();
+                    newAccident.datetime = datetime;
+                    newAccident.driverAge = driverAge;
+                    newAccident.driverGender = driverGender;
+                    newAccident.weather = weather;
+                    newAccident.roadSurface = roadSurface;
+                    newAccident.vehicleType = vehicleType;
+                    newAccident.vehicleYOM = vehicleYOM;
+                    newAccident.licenseIssueDate = licenseIssueDate;
+                    newAccident.drivingSide = drivingSide;
+                    newAccident.severity = severity;
+                    newAccident.reason = reason;
+                    newAccident.kmPost = kmPost;
+                    newAccident.suburb = suburb;
+                    newAccident.operatedSpeed = operatedSpeed;
+                    newAccident.vehicle_condition = vehicle_condition;
+                    newAccident.isDeleted = false;
+                    newAccident.sessionToken = sessionToken;
+                    newAccident.day_cat = getDayCat(datetime, isPublicHoliday);
+                    newAccident.hour_cat = getHourCat(datetime);
+                    newAccident.month_cat = getMonthCat(datetime);
+                    newAccident.vision = getVision(datetime, weather);
+                    newAccident.age_cat = getAgeCat(driverAge);
+                    newAccident.km_cat = getKmCat(kmPost);
+                    newAccident.drowsiness = getDrowsiness(datetime);
+                    newAccident.enough_gap = getEnoughGap(reason);
+                    newAccident.animal_crossing_problem = getAnimalCrossing(datetime, weather);
+                    newAccident.save()
+                        .then(() =>
+                            res.send({
+                                success: true,
+                                message: 'Accident submitted successfully.',
+                                data: newAccident
+                            })
+                        )
+                        .catch(err => res.send({
+                            success: false,
+                            message: 'Error:Data Validation Error'
+                        })
+                        )
 
+                }
+            })
+        }
+    }
+    )
+
+});
 
 //List All Accidents
 router.route('/list').get((req, res) => {

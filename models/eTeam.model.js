@@ -11,8 +11,7 @@ const eTeamSchema = new Schema(
     contactNumber: { type: String, required: true },
     isDeleted: {type: Boolean, default:false},
     lat: { type: String },
-    lng: { type: String },
-    drivingSide: { type: Boolean }//0:cmbtomatara, 1:mataratocmb
+    lng: { type: String }
   },
   {
     timestamps: true,

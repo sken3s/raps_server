@@ -1,20 +1,15 @@
 const router = require("express").Router();
 let IncidentReport = require("../../models/incidentReport.model");
 let DriverSession = require("../../models/driverSession.model");
-let PoliceSession = require("../../models/policeSession.model");
 
-//Submit (post request)
+//Submit (post request) (duplicate submits should be controlled)
 router.route("/submit").post((req, res) => {
   const { body } = req;
   const {
     isAccident,
-    weather,
-    vehicleType,
     drivingSide,
-    severity,
-    kmPost,
-    suburb,
-    operatedSpeed,
+    lat,
+    lng,
     sessionToken
   } = body;
   //Data constraints
@@ -44,19 +39,16 @@ router.route("/submit").post((req, res) => {
           message: "Error:Invalid Session",
         });
       } else {
+        //add a way to check if reported/dispatched status incidents within 100m are there in the DB.
+        //if not:
         //update to database
 
         const newIncident = new IncidentReport();
-
         newIncident.isAccident = isAccident;
-        newIncident.weather = weather;
-        newIncident.vehicleType = vehicleType;
         newIncident.drivingSide = drivingSide;
-        newIncident.severity = severity;
-        newIncident.kmPost = kmPost;
-        newIncident.suburb = suburb;
-        newIncident.operatedSpeed = operatedSpeed;
-        newIncident.status = 0;
+        newIncident.lat = lat;
+        newIncident.lng = lng;
+        newIncident.status = 0; //reported
         newIncident.sessionToken = sessionToken;
         newIncident.driverUsername = sessions[0].username;
 
@@ -79,85 +71,7 @@ router.route("/submit").post((req, res) => {
   );
 });
 
-//Submit (post request)
-router.route("/update").post((req, res) => {
-  const { body } = req;
-  const {
-    id,
-    isAccident,
-    weather,
-    vehicleType,
-    drivingSide,
-    severity,
-    kmPost,
-    suburb,
-    operatedSpeed,
-    sessionToken,
-  } = body;
-  //Data constraints
-
-  if (!id || id.length != 24) {
-    return res.send({
-      success: false,
-      message: "Error: Incident invalid." + id,
-    });
-  }
-
-  if (!sessionToken || sessionToken.length != 24) {
-    return res.send({
-      success: false,
-      message: "Error: Session Token invalid.",
-    });
-  }
-
-  //validating session
-  DriverSession.find(
-    {
-      _id: sessionToken,
-      isDeleted: false,
-    },
-    (err, sessions) => {
-      if (err) {
-        return res.send({
-          success: false,
-          message: "Error:Server error or Session not found",
-        });
-      }
-      if (sessions.length != 1) {
-        return res.send({
-          success: false,
-          message: "Error:Invalid Session",
-        });
-      } else {
-        //update dB
-        const updateIncident = new IncidentReport();
-
-        updateIncident.isAccident = isAccident;
-        updateIncident.weather = weather;
-        updateIncident.vehicleType = vehicleType;
-        updateIncident.drivingSide = drivingSide;
-        updateIncident.severity = severity;
-        updateIncident.kmPost = kmPost;
-        updateIncident.suburb = suburb;
-        updateIncident.operatedSpeed = operatedSpeed;
-        updateIncident.sessionToken = sessionToken;
-
-        console.log(updateIncident);
-        IncidentReport.findOneAndUpdate(
-          { _id: id },
-          updateIncident,
-          { upsert: true },
-          function (err, doc) {
-            if (err) return res.send(500, { error: err });
-            return res.send("Succesfully saved.");
-          }
-        );
-      }
-    }
-  );
-});
-
-//List All Incidents
+//List All Incidents (for testing only)
 router.route("/list").get((req, res) => {
   IncidentReport.find(
     {
@@ -176,13 +90,12 @@ router.route("/list").get((req, res) => {
             id: incidentList[i]._id,
             datetime: incidentList[i].datetime,
             isAccident: incidentList[i].isAccident,
-            weather: incidentList[i].weather,
-            vehicleType: incidentList[i].vehicleType,
             drivingSide: incidentList[i].drivingSide,
-            severity: incidentList[i].severity,
-            kmPost: incidentList[i].kmPost,
-            suburb: incidentList[i].suburb,
-            operatedSpeed: incidentList[i].operatedSpeed
+            lat: incidentList[i].lat,
+            lng: incidentList[i].lng,
+            status: incidentList[i].status,
+            driverUsername: incidentList[i].driverUsername,
+            eTeamUsername: incidentList[i].eTeamUsername
           });
         }
 
@@ -196,10 +109,81 @@ router.route("/list").get((req, res) => {
   );
 });
 
-//Deleting an Incident
+
+//Listing Incidents by driver (report history)
+router.route('/driver/reported').post((req, res) => {
+  const { body } = req;
+  const { sessionToken} = body; // session token of driverSession
+      //Data constraints
+    if(!sessionToken|| sessionToken.length!=24){
+        return res.send({
+            success:false,
+            message:'Error: Session Token invalid.'
+        })}
+    //validating session
+    DriverSession.find({   
+        _id:sessionToken, 
+        isDeleted:false
+    }, (err,sessions) =>{
+        if(err){
+            return res.send({
+                success:false,
+                message:'Error:Server error or Session not found'
+            })
+        }
+        if(sessions.length!=1 || sessions[0].isDeleted){
+            return res.send({
+                success:false,
+                message:'Error:Invalid Session'
+            })
+        }else{
+            //incident list
+            IncidentReport.find(
+              {
+                driverUsername:sessions[0].username,
+                status:0
+              },
+              (err, incidentList) => {
+                if (err) {
+                  return res.send({
+                    success: false,
+                    message: "Error:Server error",
+                  });
+                } else {
+                  let data = [];
+                  for (i in incidentList) {
+                    data.push({
+                      id: incidentList[i]._id,
+                      datetime: incidentList[i].datetime,
+                      isAccident: incidentList[i].isAccident,
+                      drivingSide: incidentList[i].drivingSide,
+                      lat: incidentList[i].lat,
+                      lng: incidentList[i].lng,
+                      status: incidentList[i].status,
+                      driverUsername: incidentList[i].driverUsername,
+                      eTeamUsername: incidentList[i].eTeamUsername
+                    });
+                  }
+          
+                  return res.send({
+                    success: true,
+                    message: "List received",
+                    data: data,
+                  });
+                }
+              }
+            );
+                }
+            }) 
+    });
+
+
+
+
+//Deleting an Incident (for driver. has to be the one who submitted)
 router.route('/delete').delete((req, res) => {
   const { body } = req;
-  const {id, sessionToken} = body; //id of incident to be deleted, session token of police user 
+  const {id, sessionToken} = body; //id of incident to be deleted, session token of driverSession 
       //Data constraints
   if(!id || id.length!=24){
       return res.send({
@@ -212,7 +196,7 @@ router.route('/delete').delete((req, res) => {
             message:'Error: Session Token invalid.'
         })}
     //validating session
-    PoliceSession.find({   
+    DriverSession.find({   
         _id:sessionToken, 
         isDeleted:false
     }, (err,sessions) =>{
@@ -230,18 +214,28 @@ router.route('/delete').delete((req, res) => {
         }else{
             //validating event deletion
             IncidentReport.findOneAndDelete({
-              _id: id
+              _id: id, 
+              driverUsername:sessions[0].username
           }, function (err, docs) { 
               if (err){ 
                   return res.send({
                       success:false,
-                      message:'Error:Server error'
+                      message:'Error:Server error or Incident invalid',
+                      error:err
                   })
-              } 
+              }
+              else if(!docs){ 
+                return res.send({
+                    success:false,
+                    message:'Incident not found',
+                    deletedRecord:docs
+                })
+            }  
               else{ 
                   return res.send({
                       success:true,
-                      message:'Event deleted'
+                      message:'Incident deleted',
+                      deletedRecord:docs
                   })
               } 
           })
