@@ -1,231 +1,357 @@
-const router = require('express').Router();
-let Event = require('../../models/event.model');
-let PoliceSession = require('../../models/policeSession.model');
-let ETeamSession = require('../../models/eTeamSession.model');
+const router = require("express").Router();
+let Event = require("../../models/event.model");
+let PoliceSession = require("../../models/policeSession.model");
+let ETeamSession = require("../../models/eTeamSession.model");
+let PublicHoliday = require("../../models/publicHoliday.model");
 
 //Submit (police)
-router.route('/submit').post((req, res) => {
+router.route("/submit").post((req, res) => {
   const { body } = req;
   const {
     datetime,
-    type ,
-    drivingSide ,
-    severity ,
-    kmPost  ,
+    type,
+    drivingSide,
+    severity,
+    kmPost,
     suburb,
-    sessionToken
-} = body;
+    sessionToken,
+  } = body;
   //Data constraints
-  if(!datetime){
-      return res.send({
-          success:false,
-          message:'Error: Date/Time invalid.'
-      })}
-    if(!sessionToken|| sessionToken.length!=24){
-        return res.send({
-            success:false,
-            message:'Error: Session Token invalid.'
-        })}
-    //validating session
-    PoliceSession.find({   
-        _id:sessionToken, 
-        isDeleted:false
-    }, (err,sessions) =>{
-        if(err){
-            return res.send({
-                success:false,
-                message:'Error:Server error or Session not found'
-            })
-        }
-        if(sessions.length!=1){
-            return res.send({
-                success:false,
-                message:'Error:Invalid Session'
-            })
-        }else{
-                //save to database
-                const  newEvent = new Event();
-                 newEvent.datetime = datetime;
-                 newEvent.type = type;
-                 newEvent.drivingSide = drivingSide;
-                 newEvent.severity = severity;
-                 newEvent.kmPost = kmPost;
-                 newEvent.suburb = suburb;
-                 newEvent.sessionToken = sessionToken;
-                 newEvent.save()
-                .then(() => 
-                    res.send({
-                    success:true,
-                    message:'Event submitted successfully.'
-                })
-                )
-                .catch(err => res.send({
-                    success:false,
-                    message:'Error:Data Validation Error'
-                })
-                )
-
-            }
-        }
-        )
+  if (!datetime) {
+    return res.send({
+      success: false,
+      message: "Error: Date/Time invalid.",
     });
+  }
+  if (!sessionToken || sessionToken.length != 24) {
+    return res.send({
+      success: false,
+      message: "Error: Session Token invalid.",
+    });
+  }
+  //validating session
+  PoliceSession.find(
+    {
+      _id: sessionToken,
+      isDeleted: false,
+    },
+    (err, sessions) => {
+      if (err) {
+        return res.send({
+          success: false,
+          message: "Error:Server error or Session not found",
+        });
+      }
+      if (sessions.length != 1) {
+        return res.send({
+          success: false,
+          message: "Error:Invalid Session",
+        });
+      } else {
+        //save to database
+        const newEvent = new Event();
+        newEvent.datetime = datetime;
+        newEvent.type = type;
+        newEvent.drivingSide = drivingSide;
+        newEvent.severity = severity;
+        newEvent.kmPost = kmPost;
+        newEvent.suburb = suburb;
+        newEvent.sessionToken = sessionToken;
+        newEvent
+          .save()
+          .then(() =>
+            res.send({
+              success: true,
+              message: "Event submitted successfully.",
+            })
+          )
+          .catch((err) =>
+            res.send({
+              success: false,
+              message: "Error:Data Validation Error",
+            })
+          );
+      }
+    }
+  );
+});
 
 //Submit (eteam)
-router.route('/eteam/submit').post((req, res) => {
-    const { body } = req;
-    const {
-      datetime,
-      type ,
-      drivingSide ,
-      severity ,
-      kmPost  ,
-      suburb,
-      sessionToken
+router.route("/eteam/submit").post((req, res) => {
+  const { body } = req;
+  const {
+    datetime,
+    type,
+    drivingSide,
+    severity,
+    kmPost,
+    suburb,
+    sessionToken,
   } = body;
-    //Data constraints
-    if(!datetime){
+  //Data constraints
+  if (!datetime) {
+    return res.send({
+      success: false,
+      message: "Error: Date/Time invalid.",
+    });
+  }
+  if (!sessionToken || sessionToken.length != 24) {
+    return res.send({
+      success: false,
+      message: "Error: Session Token invalid.",
+    });
+  }
+  //validating session
+  ETeamSession.find(
+    {
+      _id: sessionToken,
+      isDeleted: false,
+    },
+    (err, sessions) => {
+      if (err) {
         return res.send({
-            success:false,
-            message:'Error: Date/Time invalid.'
-        })}
-      if(!sessionToken|| sessionToken.length!=24){
-          return res.send({
-              success:false,
-              message:'Error: Session Token invalid.'
-          })}
-      //validating session
-      ETeamSession.find({   
-          _id:sessionToken, 
-          isDeleted:false
-      }, (err,sessions) =>{
-          if(err){
-              return res.send({
-                  success:false,
-                  message:'Error:Server error or Session not found'
-              })
-          }
-          if(sessions.length!=1){
-              return res.send({
-                  success:false,
-                  message:'Error:Invalid Session'
-              })
-          }else{
-                  //save to database
-                  const  newEvent = new Event();
-                   newEvent.datetime = datetime;
-                   newEvent.type = type;
-                   newEvent.drivingSide = drivingSide;
-                   newEvent.severity = severity;
-                   newEvent.kmPost = kmPost;
-                   newEvent.suburb = suburb;
-                   newEvent.sessionToken = sessionToken;
-                   newEvent.save()
-                  .then(() => 
-                      res.send({
-                      success:true,
-                      message:'Event submitted successfully.'
-                  })
-                  )
-                  .catch(err => res.send({
-                      success:false,
-                      message:'Error:Data Validation Error'
-                  })
-                  )
-  
-              }
-          }
+          success: false,
+          message: "Error:Server error or Session not found",
+        });
+      }
+      if (sessions.length != 1) {
+        return res.send({
+          success: false,
+          message: "Error:Invalid Session",
+        });
+      } else {
+        //save to database
+        const newEvent = new Event();
+        newEvent.datetime = datetime;
+        newEvent.type = type;
+        newEvent.drivingSide = drivingSide;
+        newEvent.severity = severity;
+        newEvent.kmPost = kmPost;
+        newEvent.suburb = suburb;
+        newEvent.sessionToken = sessionToken;
+        newEvent
+          .save()
+          .then(() =>
+            res.send({
+              success: true,
+              message: "Event submitted successfully.",
+            })
           )
-      });
-
+          .catch((err) =>
+            res.send({
+              success: false,
+              message: "Error:Data Validation Error",
+            })
+          );
+      }
+    }
+  );
+});
 
 //List All Events
-router.route('/list').get((req,res) => {
-    Event.find({   
-            //finds without filter
-        }, (err,eventList) =>{
-            if(err){
-                return res.send({
-                    success:false,
-                    message:'Error:Server error'
-                })
-            }else{
-                let data=[];
-                for(i in eventList){
-                   data.push({
-                        'id':eventList[i]._id,
-                        'datetime':eventList[i].datetime, 
-                        'type':eventList[i].type,
-                        'drivingSide':eventList[i].drivingSide,
-                        'severity':eventList[i].severity,
-                        'kmPost':eventList[i].kmPost,
-                        'suburb':eventList[i].suburb
-                })
-                }
+router.route("/list").get((req, res) => {
+  Event.find(
+    {
+      //finds without filter
+    },
+    (err, eventList) => {
+      if (err) {
+        return res.send({
+          success: false,
+          message: "Error:Server error",
+        });
+      } else {
+        let data = [];
+        for (i in eventList) {
+          data.push({
+            id: eventList[i]._id,
+            datetime: eventList[i].datetime,
+            type: eventList[i].type,
+            drivingSide: eventList[i].drivingSide,
+            severity: eventList[i].severity,
+            kmPost: eventList[i].kmPost,
+            suburb: eventList[i].suburb,
+          });
+        }
 
-                return res.send({
-                    success:true,
-                    message:'List received',
-                    data:data
-                })
-            }
-})
-})
+        return res.send({
+          success: true,
+          message: "List received",
+          data: data,
+        });
+      }
+    }
+  );
+});
 
 //Deleting an event
-router.route('/delete').delete((req, res) => {
-    const { body } = req;
-    const {id, sessionToken} = body; //id of event to be deleted, session token of police user 
-        //Data constraints
-    if(!id || id.length!=24){
+router.route("/delete").delete((req, res) => {
+  const { body } = req;
+  const { id, sessionToken } = body; //id of event to be deleted, session token of police user
+  //Data constraints
+  if (!id || id.length != 24) {
+    return res.send({
+      success: false,
+      message: "Error: Event invalid.",
+    });
+  }
+  if (!sessionToken || sessionToken.length != 24) {
+    return res.send({
+      success: false,
+      message: "Error: Session Token invalid.",
+    });
+  }
+  //validating session
+  PoliceSession.find(
+    {
+      _id: sessionToken,
+      isDeleted: false,
+    },
+    (err, sessions) => {
+      if (err) {
         return res.send({
-            success:false,
-            message:'Error: Event invalid.'
-        })}
-      if(!sessionToken|| sessionToken.length!=24){
-          return res.send({
-              success:false,
-              message:'Error: Session Token invalid.'
-          })}
-      //validating session
-      PoliceSession.find({   
-          _id:sessionToken, 
-          isDeleted:false
-      }, (err,sessions) =>{
-          if(err){
+          success: false,
+          message: "Error:Server error or Session not found",
+        });
+      }
+      if (sessions.length != 1 || sessions[0].isDeleted) {
+        return res.send({
+          success: false,
+          message: "Error:Invalid Session",
+        });
+      } else {
+        //validating event deletion
+        Event.findOneAndDelete(
+          {
+            _id: id,
+          },
+          function (err, docs) {
+            if (err) {
               return res.send({
-                  success:false,
-                  message:'Error:Server error or Session not found'
-              })
+                success: false,
+                message: "Error:Server error",
+              });
+            } else {
+              return res.send({
+                success: true,
+                message: "Event deleted",
+              });
+            }
           }
-          if(sessions.length!=1 || sessions[0].isDeleted){
-              return res.send({
-                  success:false,
-                  message:'Error:Invalid Session'
-              })
-          }else{
-              //validating event deletion
-              Event.findOneAndDelete({
-                _id: id
-            }, function (err, docs) { 
-                if (err){ 
+        );
+      }
+    }
+  );
+});
+
+//Update event
+router.route("/update").post((req, res) => {
+  const { body } = req;
+  const {
+    id,
+    datetime,
+    eventType,
+    drivingSide,
+    severity,
+    kmPost,
+    suburb,
+    sessionToken,
+  } = body;
+  //Data constraints
+  if (!datetime) {
+    return res.send({
+      success: false,
+      message: "Error: Date/Time invalid.",
+    });
+  }
+  if (!sessionToken || sessionToken.length != 24) {
+    return res.send({
+      success: false,
+      message: "Error: Session Token invalid.",
+    });
+  }
+  if (!id || id.length != 24) {
+    return res.send({
+      success: false,
+      message: "Error: Event ID invalid.",
+    });
+  }
+  //validating session
+  PoliceSession.find(
+    {
+      _id: sessionToken,
+      isDeleted: false,
+    },
+    (err, sessions) => {
+      if (err) {
+        return res.send({
+          success: false,
+          message: "Error:Server error or Session not found",
+        });
+      }
+      if (sessions.length != 1) {
+        return res.send({
+          success: false,
+          message: "Error:Invalid Session",
+        });
+      } else {
+        //check if publicHoliday
+        isPublicHoliday = false;
+        const d = new Date(datetime.toString());
+        const gte = new Date(d.setDate(d.getDate() - 1));
+        const lt = new Date(d.setDate(d.getDate() + 1));
+        PublicHoliday.find(
+          {
+            date: { $lt: lt, $gte: gte },
+          },
+          (err1, pubhollist) => {
+            if (err1) {
+              pass;
+            } else {
+              if (pubhollist.length > 0) {
+                //holiday found
+                isPublicHoliday = true;
+              }
+              //validating accident update
+              Event.findOneAndUpdate(
+                {
+                  _id: id,
+                  isDeleted: false,
+                },
+                {
+                  $set: {
+                    datetime: datetime,
+                    eventType: eventType,
+                    drivingSide: drivingSide,
+                    severity: severity,
+                    kmPost: kmPost,
+                    suburb: suburb,
+                  },
+                },
+                null,
+                (err, event) => {
+                  if (err) {
+                    console.log("update terminated.");
                     return res.send({
-                        success:false,
-                        message:'Error:Server error'
-                    })
-                } 
-                else{ 
+                      success: false,
+                      message: "Error: Server error",
+                    });
+                  } else {
+                    console.log("update completed");
                     return res.send({
-                        success:true,
-                        message:'Event deleted'
-                    })
-                } 
-            })
-              
+                      success: true,
+                      message: "Event Updated.",
+                      data: event,
+                    });
                   }
-              }) 
-      });
-
-  
-
+                }
+              );
+            }
+          }
+        );
+      }
+    }
+  );
+});
 
 module.exports = router;
