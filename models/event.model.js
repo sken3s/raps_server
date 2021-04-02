@@ -9,6 +9,7 @@ const eventSchema = new Schema({
   severity: { type: Number, min:0, max:2}, //0:minor, 1:intermediate, 2:major
   kmPost: { type: Number, min:0, max:127},
   suburb: { type: Number, min:0, max:10},
+  isDeleted:{type:Boolean},
   sessionToken:{type:String}
 }, {
   timestamps: true,

@@ -460,22 +460,17 @@ router.route('/dispatch').post( async (req, res) => {
                                 transactionSession.endSession()
                             }
                         }   
-                
                         await transactionSession.commitTransaction()
                         transactionSession.endSession()
-                        res.send('ETeam dispatch transaction successfull')
                     } catch (err) {
                         await transactionSession.abortTransaction()
                         transactionSession.endSession()
                         console.log(err)
                         res.send('Error when execution eteam/dispatch')
                     }
-
-          
                   return res.send({
                     success: true,
-                    message: "List received",
-                    data: data,
+                    message: "Emergency Team Dispatched."
                   });
                 }
               }
