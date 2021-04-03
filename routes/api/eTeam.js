@@ -447,35 +447,30 @@ router.route('/dispatch').post( async (req, res) => {
                             { username: sessions[0].username, availability: true }, { $set: { availability: false } }, {transactionSession});
                         
                         if(!doc){
-                            await transactionSession.abortTransaction()
-                            res.send('ETeam unavailable '+sessions[0].username)
+                            await transactionSession.abortTransaction()   
                             transactionSession.endSession()
+                            return res.send('ETeam unavailable '+sessions[0].username)
                         }else{
                             let doc2 = await IncidentReport.findOneAndUpdate(
                                 { _id:id, eTeamUsername:null, status:0 }, { $set: { eTeamUsername: sessions[0].username, status:1 } }, {transactionSession});
                             
                             if(!doc2){
                                 await transactionSession.abortTransaction()
-                                res.send('Incident unavailable')
                                 transactionSession.endSession()
+                                return res.send('Incident unavailable');
                             }
                         }   
-                
                         await transactionSession.commitTransaction()
                         transactionSession.endSession()
-                        res.send('ETeam dispatch transaction successfull')
                     } catch (err) {
                         await transactionSession.abortTransaction()
                         transactionSession.endSession()
                         console.log(err)
-                        res.send('Error when execution eteam/dispatch')
+                        return res.send('Error when execution eteam/dispatch');
                     }
-
-          
                   return res.send({
                     success: true,
-                    message: "List received",
-                    data: data,
+                    message: "Emergency Team Dispatched."
                   });
                 }
               }
@@ -541,36 +536,29 @@ router.route('/complete').post( async (req, res) => {
                         
                         if(!doc){
                             await transactionSession.abortTransaction()
-                            res.send('ETeam unavailable '+sessions[0].username)
                             transactionSession.endSession()
+                            return res.send('ETeam unavailable '+sessions[0].username)
                         }else{
                             let doc2 = await IncidentReport.findOneAndUpdate(
                                 { _id:id, eTeamUsername:sessions[0].username, status:1 }, { $set: { status:2 } }, {transactionSession});
                             
                             if(!doc2){
                                 await transactionSession.abortTransaction()
-                                res.send('Incident unavailable')
                                 transactionSession.endSession()
+                                return res.send('Incident unavailable')
                             }
                         }
                         
                 
                         await transactionSession.commitTransaction()
                         transactionSession.endSession()
-                        res.send('ETeam completion transaction successfull')
+                        return res.send('ETeam completion transaction successfull')
                     } catch (err) {
                         await transactionSession.abortTransaction()
                         transactionSession.endSession()
                         console.log(err)
-                        res.send('Error when execution eteam/complete')
+                        return res.send('Error when execution eteam/complete')
                     }
-
-          
-                  return res.send({
-                    success: true,
-                    message: "List received",
-                    data: data,
-                  });
                 }
               }
             );

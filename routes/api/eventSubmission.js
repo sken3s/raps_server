@@ -250,7 +250,7 @@ router.route("/update").post((req, res) => {
   const {
     id,
     datetime,
-    eventType,
+    type,
     drivingSide,
     severity,
     kmPost,
@@ -321,7 +321,7 @@ router.route("/update").post((req, res) => {
                 {
                   $set: {
                     datetime: datetime,
-                    eventType: eventType,
+                    type: type,
                     drivingSide: drivingSide,
                     severity: severity,
                     kmPost: kmPost,
@@ -341,6 +341,14 @@ router.route("/update").post((req, res) => {
                     return res.send({
                       success: true,
                       message: "Event Updated.",
+                      id,
+                      datetime,
+                      type,
+                      drivingSide,
+                      severity,
+                      kmPost,
+                      suburb,
+                      sessionToken,
                       data: event,
                     });
                   }
