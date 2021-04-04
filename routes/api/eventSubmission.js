@@ -56,6 +56,7 @@ router.route("/submit").post((req, res) => {
         newEvent.severity = severity;
         newEvent.kmPost = kmPost;
         newEvent.suburb = suburb;
+        newEvent.isDeleted = false;
         newEvent.sessionToken = sessionToken;
         newEvent
           .save()
@@ -128,6 +129,7 @@ router.route("/eteam/submit").post((req, res) => {
         newEvent.severity = severity;
         newEvent.kmPost = kmPost;
         newEvent.suburb = suburb;
+        newEvent.isDeleted = false;
         newEvent.sessionToken = sessionToken;
         newEvent
           .save()
@@ -152,7 +154,7 @@ router.route("/eteam/submit").post((req, res) => {
 router.route("/list").get((req, res) => {
   Event.find(
     {
-      //finds without filter
+      isDeleted:false
     },
     (err, eventList) => {
       if (err) {
@@ -185,63 +187,61 @@ router.route("/list").get((req, res) => {
 });
 
 //Deleting an event
-router.route("/delete").delete((req, res) => {
+router.route('/delete').delete((req, res) => {
   const { body } = req;
-  const { id, sessionToken } = body; //id of event to be deleted, session token of police user
+  const { id, sessionToken } = body; //id of event to be deleted, session token of police user 
   //Data constraints
   if (!id || id.length != 24) {
-    return res.send({
-      success: false,
-      message: "Error: Event invalid.",
-    });
+      return res.send({
+          success: false,
+          message: 'Error: Event invalid.'
+      })
   }
   if (!sessionToken || sessionToken.length != 24) {
-    return res.send({
-      success: false,
-      message: "Error: Session Token invalid.",
-    });
+      return res.send({
+          success: false,
+          message: 'Error: Session Token invalid.'
+      })
   }
   //validating session
-  PoliceSession.find(
-    {
+  PoliceSession.find({
       _id: sessionToken,
-      isDeleted: false,
-    },
-    (err, sessions) => {
+      isDeleted: false
+  }, (err, sessions) => {
       if (err) {
-        return res.send({
-          success: false,
-          message: "Error:Server error or Session not found",
-        });
+          return res.send({
+              success: false,
+              message: 'Error:Server error or Session not found'
+          })
       }
       if (sessions.length != 1 || sessions[0].isDeleted) {
-        return res.send({
-          success: false,
-          message: "Error:Invalid Session",
-        });
+          return res.send({
+              success: false,
+              message: 'Error:Invalid Session'
+          })
       } else {
-        //validating event deletion
-        Event.findOneAndDelete(
-          {
-            _id: id,
-          },
-          function (err, docs) {
-            if (err) {
-              return res.send({
-                success: false,
-                message: "Error:Server error",
-              });
-            } else {
-              return res.send({
-                success: true,
-                message: "Event deleted",
-              });
-            }
-          }
-        );
+          //validating event deletion
+          Event.findOneAndUpdate({
+              _id: id,
+              isDeleted: false
+          }, { $set: { isDeleted: true } }, null,
+              (err, event) => {
+                  if (err) {
+                      return res.send({
+                          success: false,
+                          message: 'Error: Server error'
+                      })
+                  }
+                  else {
+                      return res.send({
+                          success: true,
+                          message: 'Event Deleted.'
+                      })
+                  }
+              })
+
       }
-    }
-  );
+  })
 });
 
 //Update event
@@ -295,24 +295,7 @@ router.route("/update").post((req, res) => {
           message: "Error:Invalid Session",
         });
       } else {
-        //check if publicHoliday
-        isPublicHoliday = false;
-        const d = new Date(datetime.toString());
-        const gte = new Date(d.setDate(d.getDate() - 1));
-        const lt = new Date(d.setDate(d.getDate() + 1));
-        PublicHoliday.find(
-          {
-            date: { $lt: lt, $gte: gte },
-          },
-          (err1, pubhollist) => {
-            if (err1) {
-              pass;
-            } else {
-              if (pubhollist.length > 0) {
-                //holiday found
-                isPublicHoliday = true;
-              }
-              //validating accident update
+              //validating event update
               Event.findOneAndUpdate(
                 {
                   _id: id,
@@ -325,7 +308,7 @@ router.route("/update").post((req, res) => {
                     drivingSide: drivingSide,
                     severity: severity,
                     kmPost: kmPost,
-                    suburb: suburb,
+                    suburb: suburb
                   },
                 },
                 null,
@@ -340,23 +323,12 @@ router.route("/update").post((req, res) => {
                     console.log("update completed");
                     return res.send({
                       success: true,
-                      message: "Event Updated.",
-                      id,
-                      datetime,
-                      type,
-                      drivingSide,
-                      severity,
-                      kmPost,
-                      suburb,
-                      sessionToken,
-                      data: event,
+                      message: "Event Updated."
                     });
                   }
                 }
               );
-            }
-          }
-        );
+            
       }
     }
   );
