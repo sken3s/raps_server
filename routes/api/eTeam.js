@@ -449,7 +449,10 @@ router.route('/dispatch').post( async (req, res) => {
                         if(!doc){
                             await transactionSession.abortTransaction()   
                             transactionSession.endSession()
-                            return res.send('ETeam unavailable '+sessions[0].username)
+                            return res.send({
+                                success: false,
+                                message: "ETeam "+sessions[0].username+" unavailable."
+                              });
                         }else{
                             let doc2 = await IncidentReport.findOneAndUpdate(
                                 { _id:id, eTeamUsername:null, status:0 }, { $set: { eTeamUsername: sessions[0].username, status:1 } }, {transactionSession});
@@ -457,11 +460,14 @@ router.route('/dispatch').post( async (req, res) => {
                             if(!doc2){
                                 await transactionSession.abortTransaction()
                                 transactionSession.endSession()
-                                return res.send('Incident unavailable');
+                                return res.send({
+                                    success: false,
+                                    message: "Incident unavailable."
+                                  });
+                            }else{
+                                await transactionSession.commitTransaction()
                             }
-                        }   
-                        await transactionSession.commitTransaction()
-                        transactionSession.endSession()
+                        }
                     } catch (err) {
                         await transactionSession.abortTransaction()
                         transactionSession.endSession()
