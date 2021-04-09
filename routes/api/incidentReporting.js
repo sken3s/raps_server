@@ -71,11 +71,11 @@ router.route("/submit").post((req, res) => {
   );
 });
 
-//List All Incidents (for testing only)
+//List Handled Incidents
 router.route("/list").get((req, res) => {
   IncidentReport.find(
     {
-      //finds without filter
+      status:2
     },
     (err, incidentList) => {
       if (err) {

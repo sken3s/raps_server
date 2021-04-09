@@ -172,15 +172,15 @@ router.route('/signin').post((req, res) => {
             if (err) {
                 return res.send({
                     success: false,
-                    message: 'Error:Server error',
-                    adminRights: policeSession.adminRights
+                    message: 'Error:Server error'
                 });
             };
 
             return res.send({
                 success: true,
                 message: 'Valid sign in',
-                token: doc._id //session id taken from mongodb doc (record)
+                token: doc._id, //session id taken from mongodb doc (record)
+                adminRights: policeSession.adminRights
             });
         });
 
