@@ -5,15 +5,36 @@ let ETeamSession = require('../../models/eTeamSession.model');
 let Driver = require("../../models/driver.model");
 let DriverSession = require('../../models/driverSession.model');
 let IncidentReport = require("../../models/incidentReport.model");
-let Accident = require('../../models/accident.model');
-let Event = require('../../models/event.model');
 
-//list eteams
-router.route("/list").get((req, res) => {
-  ETeam.find()
-    .then((teams) => res.json(teams))
-    .catch((err) => res.status(400).json("SERVER_ERROR"));
-});
+//List All Police Accounts
+router.route('/list').get((req, res) => {
+    ETeam.find({
+        isDeleted: false
+    }, (err, eteamlist) => {
+        if (err) {
+            return res.send({
+                success: false,
+                message: 'Error:Server error'
+            })
+        } else {
+            let data = [];
+            for (i in eteamlist) {
+                data.push({ 'username': eteamlist[i].username, 
+                'name': eteamlist[i].name, 
+                'contactNumber': eteamlist[i].contactNumber,
+                'availability': eteamlist[i].availability,
+                'lat': eteamlist[i].lat, 
+                'lng': eteamlist[i].lng  })
+            }
+            return res.send({
+                success: true,
+                message: 'List received',
+                data: data
+            })
+        }
+    }).sort({'adminRights':-1})
+})
+
 
 //Sign in
 router.route('/signin').post((req, res) => {
