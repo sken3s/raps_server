@@ -400,7 +400,7 @@ router.route('/list').get((req, res) => {
                 data: data
             })
         }
-    })
+    }).sort({})
 })
 
 //Deleting an accident
