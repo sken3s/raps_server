@@ -1,6 +1,7 @@
 const router = require("express").Router();
 let IncidentReport = require("../../models/incidentReport.model");
 let DriverSession = require("../../models/driverSession.model");
+let PoliceSession = require("../../models/policeSession.model");
 
 //Submit (post request) (duplicate submits should be controlled)
 router.route("/submit").post((req, res) => {
