@@ -6,7 +6,7 @@ let Driver = require("../../models/driver.model");
 let DriverSession = require('../../models/driverSession.model');
 let IncidentReport = require("../../models/incidentReport.model");
 
-//List All Police Accounts
+//List All ETeam Accounts
 router.route('/list').get((req, res) => {
     ETeam.find({
         isDeleted: false
@@ -32,7 +32,7 @@ router.route('/list').get((req, res) => {
                 data: data
             })
         }
-    }).sort({'adminRights':-1})
+    }).sort({})
 })
 
 
