@@ -148,14 +148,14 @@ router.route('/signin').post((req, res) => {
         if (users.length != 1) {
             return res.send({
                 success: false,
-                message: 'Error:Invalid username (password validation)'
+                message: 'Error : Invalid username'
             })
         }
         const police = users[0];
         if (!police.validPassword(password)) {
             return res.send({
                 success: false,
-                message: 'Error:Invalid password'
+                message: 'Error :Invalid password'
             })
         }
         if (police.isDeleted) {

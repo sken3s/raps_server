@@ -4,21 +4,21 @@ const Schema = mongoose.Schema;
 
 const accidentSchema = new Schema({
   datetime: { type: Date, required: true },
-  driverAge: { type: Number, min: 17, max: 76},
-  driverGender: { type: Boolean }, //0:male, 1:female
-  weather: { type: Boolean }, //0:clear, 1:rain
-  roadSurface: { type: Boolean }, //0:Dry, 1:Wet
-  vehicleType: { type: Number, min: 0, max: 2 }, //0:car, 1:hv, 2:dualpurpose
-  vehicleYOM: { type: Number },
-  licenseIssueDate: { type: Date },
-  drivingSide: { type: Boolean }, //0:cmbtomatara, 1:mataratocmb
-  severity: { type: Number, min:0, max:2}, //0:property damage, 1:injury, 2:mortality
-  reason: { type: Number, min:0, max:5}, //0:Animal Crossing, 1:Vehicle issue, 2:Speed, 3:Tailgating, 4:Sleep,5:Slipping  
-  vehicle_condition: { type: Boolean },
-  kmPost: { type: Number, min:0, max:127},
-  suburb: { type: Number, min:0, max:10},
-  operatedSpeed: { type: Number },
-  sessionToken:{type:String},
+  driverAge: { type: Number, min: 17, max: 76, required: true },
+  driverGender: { type: Boolean, required: true }, //0:male, 1:female
+  weather: { type: Boolean, required: true }, //0:clear, 1:rain
+  roadSurface: { type: Boolean, required: true }, //0:Dry, 1:Wet
+  vehicleType: { type: Number, min: 0, max: 2, required: true }, //0:car, 1:hv, 2:dualpurpose
+  vehicleYOM: { type: Number,  required: true },
+  licenseIssueDate: { type: Date, required: true },
+  drivingSide: { type: Boolean, required: true }, //0:cmbtomatara, 1:mataratocmb
+  severity: { type: Number, min:0, max:2, required: true}, //0:property damage, 1:injury, 2:mortality
+  reason: { type: Number, min:0, max:5, required: true}, //0:Animal Crossing, 1:Vehicle issue, 2:Speed, 3:Tailgating, 4:Sleep,5:Slipping  
+  vehicle_condition: { type: Boolean, required: true },
+  kmPost: { type: Number, min:0, max:127, required: true},
+  suburb: { type: Number, min:0, max:10, required: true},
+  operatedSpeed: { type: Number, required: true },
+  sessionToken:{type:String, required: true},
   isDeleted:{type:Boolean},
   //derived
   day_cat: { type: Number,min:0,max:2 }, //0:weekday,1:weekend,2:publicholiday
