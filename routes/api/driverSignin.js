@@ -50,7 +50,7 @@ router.route('/signup').post((req, res) => {
           success:false,
           message:'Error: Username invalid.'
       })}
-    if(!name || !username || !age || !gender || !licenseIssueDate || !password){
+    if(!username || !password){
         return res.send({
             success:false,
             message:'Error: Fields cannot be empty.'
@@ -61,7 +61,6 @@ router.route('/signup').post((req, res) => {
                 message:'Error: Password invalid.'
             })}
     
-    //validating admin session
     
             //validating driver user creation
             Driver.find({

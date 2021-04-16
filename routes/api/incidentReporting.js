@@ -3,7 +3,7 @@ let IncidentReport = require("../../models/incidentReport.model");
 let DriverSession = require("../../models/driverSession.model");
 let PoliceSession = require("../../models/policeSession.model");
 
-//Submit (post request) (duplicate submits should be controlled)
+//Submit (post request)
 router.route("/submit").post((req, res) => {
   const { body } = req;
   const {
@@ -26,6 +26,7 @@ router.route("/submit").post((req, res) => {
     {
       _id: sessionToken,
       isDeleted: false,
+      isBlocked: false
     },
     (err, sessions) => {
       if (err) {

@@ -21,7 +21,7 @@ router.route('/add').post((req, res) => {
     sessionToken
 } = body;
   //Data constraints
-  if(!regno){ //registration number RegEx should be written
+  if(!regno){
       return res.send({
           success:false,
           message:'Error: Registration number invalid.'
@@ -186,7 +186,7 @@ router.route('/remove').delete((req, res) => {
   
   
 
-//List All Vehicles
+//List All Vehicles (for testing)
 router.route('/listall').get((req,res) => {
     Vehicle.find({   
         }, (err,vehicleList) =>{
