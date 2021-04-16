@@ -377,6 +377,95 @@ router.route('/update').post((req, res) => {
     })
 });
 
+//Updating password
+router.route('/changepassword').post((req, res) => {
+    const { body } = req;
+    const {sessionToken, oldpassword, newpassword } = body; //username of account to be updated, session token of an admin should be added
+    //Data constraints
+    if (!oldpassword || !newpassword || oldpassword.length < 4 ||newpassword.length < 4) {
+        return res.send({
+            success: false,
+            message: 'Error: Password invalid.'
+        })
+    }
+    if (!sessionToken || sessionToken.length != 24) {
+        return res.send({
+            success: false,
+            message: 'Error: Session Token invalid.'
+        })
+    }
+    //validating session
+    PoliceSession.find({
+        _id: sessionToken,
+        isDeleted: false
+    }, (err, sessions) => {
+        if (err) {
+            return res.send({
+                success: false,
+                message: 'Error:Server error or Session not found'
+            })
+        }
+        if (sessions.length != 1 || sessions[0].isDeleted) {
+            return res.send({
+                success: false,
+                message: 'Error:Invalid Session'
+            })
+        } else {
+            //validate password
+            Police.find({
+                username: sessions[0].username
+            }, (err, users) => {
+                if (err) {
+                    return res.send({
+                        success: false,
+                        message: 'Error:Server error'
+                    })
+                }
+                if (users.length != 1) {
+                    return res.send({
+                        success: false,
+                        message: 'Error : Invalid username'
+                    })
+                }
+                const police = users[0];
+                if (!police.validPassword(oldpassword)) {
+                    return res.send({
+                        success: false,
+                        message: 'Error :Invalid password'
+                    })
+                }
+                if (police.isDeleted) {
+                    return res.send({
+                        success: false,
+                        message: 'Error:Deleted account'
+                    })
+                }
+                //update password
+                Police.findOneAndUpdate({
+                    username: sessions[0].username,
+                    isDeleted: false
+                }, { $set: { password: police.generateHash(newpassword) } }, null,
+                    (err, police) => {
+                        if (err) {
+                            return res.send({
+                                success: false,
+                                message: 'Error: Server error'
+                            })
+                        }
+                        else {
+                            return res.send({
+                                success: true,
+                                message: 'Password updated.'
+                            })
+                        }
+                    })
+        
+            });
+        }
+    })
+});
+
+
 
 
 
