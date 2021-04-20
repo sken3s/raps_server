@@ -545,7 +545,7 @@ router.route('/eteam/add').post((req, res) => {
                 newETeam.name = name;
                 newETeam.password = newETeam.generateHash(password);
                 newETeam.contactNumber = contactNumber;
-                newETeam.availability = false; //auto sae availability as false
+                newETeam.availability = true;
                 newETeam.lat = "0";
                 newETeam.lng = "0";
                 newETeam.save()

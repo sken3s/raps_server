@@ -7,7 +7,7 @@ const eTeamSchema = new Schema(
     username: { type: String, required: true, unique: true },
     name: { type: String, default: "" },
     password: { type: String, required: true },
-    availability: { type: Boolean },
+    availability: { type: Boolean, default: true },
     contactNumber: { type: String, required: true },
     isDeleted: {type: Boolean, default:false},
     lat: { type: String },
