@@ -50,7 +50,7 @@ router.route('/signup').post((req, res) => {
           success:false,
           message:'Error: Username invalid.'
       })}
-    if(!name || !username || !age || !gender || !licenseIssueDate || !password){
+    if(!username || !password){
         return res.send({
             success:false,
             message:'Error: Fields cannot be empty.'
@@ -61,7 +61,6 @@ router.route('/signup').post((req, res) => {
                 message:'Error: Password invalid.'
             })}
     
-    //validating admin session
     
             //validating driver user creation
             Driver.find({
@@ -290,6 +289,93 @@ router.route('/delete').delete((req, res) => {
     });
 });
 
+//Updating password
+router.route('/changepassword').post((req, res) => {
+    const { body } = req;
+    const {sessionToken, oldpassword, newpassword } = body; //username of account to be updated, session token of an admin should be added
+    //Data constraints
+    if (!oldpassword || !newpassword || oldpassword.length < 4 ||newpassword.length < 4) {
+        return res.send({
+            success: false,
+            message: 'Error: Password invalid.'
+        })
+    }
+    if (!sessionToken || sessionToken.length != 24) {
+        return res.send({
+            success: false,
+            message: 'Error: Session Token invalid.'
+        })
+    }
+    //validating session
+    DriverSession.find({
+        _id: sessionToken,
+        isDeleted: false
+    }, (err, sessions) => {
+        if (err) {
+            return res.send({
+                success: false,
+                message: 'Error:Server error or Session not found'
+            })
+        }
+        if (sessions.length != 1 || sessions[0].isDeleted) {
+            return res.send({
+                success: false,
+                message: 'Error:Invalid Session'
+            })
+        } else {
+            //validate password
+            Driver.find({
+                username: sessions[0].username
+            }, (err, users) => {
+                if (err) {
+                    return res.send({
+                        success: false,
+                        message: 'Error:Server error'
+                    })
+                }
+                if (users.length != 1) {
+                    return res.send({
+                        success: false,
+                        message: 'Error : Invalid username'
+                    })
+                }
+                const driver = users[0];
+                if (!driver.validPassword(oldpassword)) {
+                    return res.send({
+                        success: false,
+                        message: 'Error :Invalid password'
+                    })
+                }
+                if (driver.isDeleted) {
+                    return res.send({
+                        success: false,
+                        message: 'Error:Deleted account'
+                    })
+                }
+                //update password
+                Driver.findOneAndUpdate({
+                    username: sessions[0].username,
+                    isDeleted: false
+                }, { $set: { password: driver.generateHash(newpassword) } }, null,
+                    (err, driver) => {
+                        if (err) {
+                            return res.send({
+                                success: false,
+                                message: 'Error: Server error'
+                            })
+                        }
+                        else {
+                            return res.send({
+                                success: true,
+                                message: 'Password updated.'
+                            })
+                        }
+                    })
+        
+            });
+        }
+    })
+});
 
    
 
